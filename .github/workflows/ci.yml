@@ -1,7 +1,7 @@
 name: CI
 
-# Runs on pull requests (uses the workflow from the base branch) so the ai-dev
-# agent gets a green/red signal it can act on, and on pushes to main.
+# Strict HTML validation so real markup bugs (unescaped tags like <n>, unknown
+# elements, malformed structure) fail CI and the ai-dev debug->fix loop corrects them.
 on:
   pull_request:
   push:
@@ -16,11 +16,16 @@ jobs:
       - name: index.html exists
         run: test -f index.html
 
-      - name: validate required HTML structure
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: W3C (Nu) HTML + CSS validation
         run: |
-          set -e
-          grep -iq "<!doctype html" index.html
-          grep -iq "<html" index.html
-          grep -iq 'name="viewport"' index.html
-          grep -iq "<title" index.html
-          echo "index.html structure looks valid"
+          python -m pip install --quiet html5validator
+          html5validator --root . --also-check-css
