@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ai-dev Technical Overview</title>
+  <title>ai-dev — Autonomous Coding Agent</title>
   <style>
     /* Base styles */
     :root {
@@ -186,128 +186,100 @@
 <body>
   <main>
     <header>
-      <h1>ai-dev Autonomous Agent System</h1>
-      <p>Technical Architecture and Workflow Overview</p>
+      <h1>ai-dev — Autonomous Coding Agent</h1>
+      <p>From a GitHub issue to a tested, auto-merged pull request — autonomously, on local models.</p>
     </header>
 
     <section>
-      <h2>Project Introduction</h2>
-      <p>The ai-dev project demonstrates an autonomous AI agent capable of:</p>
-      <ul>
-        <li>Reading GitHub issues as requirements</li>
-        <li>Generating code that adheres to project conventions</li>
-        <li>Submitting pull requests for review and merging</li>
-      </ul>
-      <p>This system represents a complete end-to-end workflow from issue analysis to implementation.</p>
+      <p>ai-dev is a self-hosted agent. You open a GitHub issue, label it <code>ai-dev</code>, and it plans the work, writes the code, opens a pull request, runs CI, fixes its own failures, and auto-merges when tests pass — using local LLMs served by LM Studio, no cloud APIs.</p>
     </section>
 
     <section>
-      <h2>Pipeline Flow Visualization</h2>
+      <h2>How it works</h2>
       <div class="flow-container">
         <div class="step">
-          <h3>Issue Analysis</h3>
-          <p>The agent analyzes GitHub issues to understand requirements and constraints.</p>
+          <h3>1. Issue Trigger</h3>
+          <p>A GitHub issue is opened and labeled <code>ai-dev</code> (only allowlisted users can trigger it).</p>
         </div>
         <div class="step">
-          <h3>Implementation Planning</h3>
-          <p>It creates a detailed plan for implementation, including code structure and dependencies.</p>
+          <h3>2. Planning</h3>
+          <p>The orchestrator parses the issue into a structured spec, then a step-by-step plan.</p>
         </div>
         <div class="step">
-          <h3>Code Generation & PR Creation</h3>
-          <p>The agent generates the necessary code changes and submits them as a pull request.</p>
+          <h3>3. Implementation</h3>
+          <p>It creates a branch <code>feature/issue-&lt;n&gt;</code>, implements the changes, commits, and pushes.</p>
+        </div>
+        <div class="step">
+          <h3>4. PR Creation</h3>
+          <p>It opens a pull request; GitHub Actions runs the CI workflow.</p>
+        </div>
+        <div class="step">
+          <h3>5. Fixing</h3>
+          <p>If CI fails: it fetches the CI logs, finds the root cause, applies a fix, and retries (up to 5 attempts).</p>
+        </div>
+        <div class="step">
+          <h3>6. Merge</h3>
+          <p>When CI is green, it squash-merges the PR and can fire an optional deploy webhook.</p>
         </div>
       </div>
+      <p>This page itself was produced by that pipeline — issue → PR → green CI → merge.</p>
     </section>
 
     <section>
-      <h2>Model Specifications</h2>
+      <h2>Models & routing</h2>
       <table>
         <thead>
           <tr>
-            <th>Model Name</th>
-            <th>Purpose</th>
-            <th>Capabilities</th>
+            <th>Task</th>
+            <th>Model</th>
+            <th>Why</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>GPT-4 Turbo</td>
-            <td>Natural language processing and code generation</td>
-            <td>Code completion, issue analysis, documentation</td>
+            <td>Code generation, file edits, issue parsing, planning</td>
+            <td>Qwen3-Coder-30B-A3B (a 30B Mixture-of-Experts coder)</td>
+            <td>Strong at writing and editing code</td>
           </tr>
           <tr>
-            <td>Claude 3 Opus</td>
-            <td>Complex reasoning and planning</td>
-            <td>Implementation strategy, architecture decisions</td>
-          </tr>
-          <tr>
-            <td>Gemini Pro</td>
-            <td>Code review and quality assurance</td>
-            <td>Style guide enforcement, bug detection</td>
+            <td>CI-failure analysis, debugging, root-cause reasoning</td>
+            <td>DeepSeek-Coder-V2-Lite</td>
+            <td>Focused diagnostic reasoning over logs</td>
           </tr>
         </tbody>
       </table>
     </section>
 
     <section>
-      <h2>Architecture & Technology Stack</h2>
-      <p>This system demonstrates how an AI agent can autonomously develop software by:</p>
-      <ul>
-        <li>Reading and interpreting GitHub issues as requirements</li>
-        <li>Generating code that adheres to project conventions</li>
-        <li>Submitting pull requests for review and merging</li>
-      </ul>
-
-      <h3>Key Technologies Used:</h3>
-      <div class="tech-stack">
-        <span class="tech-item">GitHub API</span>
-        <span class="tech-item">Python</span>
-        <span class="tech-item">OpenAI GPT-4</span>
-        <span class="tech-item">Claude 3 Opus</span>
-        <span class="tech-item">Gemini Pro</span>
-        <span class="tech-item">Git Operations</span>
-        <span class="tech-item">Automated Testing</span>
-      </div>
-
-      <pre><code># Example workflow in pseudocode
-
-# 1. Monitor GitHub issues
-issues = github.get_issues(repo='ai-dev')
-for issue in issues:
-    # 2. Analyze and plan
-    plan = agent.plan_issue(issue)
-    
-    # 3. Generate code
-    code_changes = agent.generate_code(plan)
-    
-    # 4. Create PR
-    pr = github.create_pull_request(
-        title=plan.title,
-        body=plan.description,
-        files=code_changes
-    )</code></pre>
+      <h2>Architecture & tech stack</h2>
+      <p>Orchestrator: Node.js + TypeScript with an Express HTTP server.</p>
+      <p>GitHub: a GitHub App with webhooks (issues + workflow runs) via Octokit.</p>
+      <p>Ingress: webhooks arrive over a Cloudflare tunnel.</p>
+      <p>State: SQLite — each issue is a job tracked through a state machine (<code>QUEUED → PARSING → PLANNING → IMPLEMENTING → PR_OPEN → CI_RUNNING → FIXING → MERGED / DEPLOYED / FAILED</code>).</p>
+      <p>Git: clones, branches, commits, and pushes via the git CLI using short-lived tokens.</p>
+      <p>Observability: structured logs; every model call (model, prompt, response, latency) is recorded.</p>
+      <p>Packaging: runs as a Docker container next to the local model server.</p>
     </section>
 
     <section>
-      <h2>Safety Guardrails</h2>
+      <h2>Safety & guardrails</h2>
       <div class="guardrail">
-        <p><strong>Code Quality:</strong> All generated code must pass automated tests and style checks before PR submission.</p>
+        <p>Max 5 fix attempts per issue; one active branch per issue.</p>
       </div>
       <div class="guardrail">
-        <p><strong>Security Constraints:</strong> No external network requests or file system modifications allowed during execution.</p>
+        <p>Never auto-merges unless every CI check is green.</p>
       </div>
       <div class="guardrail">
-        <p><strong>Ethical Guidelines:</strong> The agent respects project conventions and avoids generating harmful content.</p>
+        <p>Repository allowlist (scoped to the org) and a trigger-user allowlist.</p>
+      </div>
+      <div class="guardrail">
+        <p>Signature-verified webhooks; file patches are path-traversal guarded.</p>
       </div>
     </section>
 
-    <div class="note">
-      <p><strong>Note:</strong> This documentation page is completely self-contained with no external dependencies. All CSS and JavaScript are inline, making it ready to run immediately.</p>
-    </div>
-
     <footer>
-      <p>ai-dev Autonomous Agent System | Built with local LLMs</p>
-      <p>This system demonstrates AI autonomy in software development</p>
+      <p>ai-dev · built and self-documented by the agent</p>
+      <p>© 2024</p>
     </footer>
   </main>
 </body>
