@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ai-dev — Autonomous Coding Agent</title>
   <style>
     /* Base styles */
@@ -27,7 +27,7 @@
     }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
       background: var(--bg-primary);
       color: var(--text-primary);
       line-height: 1.6;
@@ -52,7 +52,7 @@
 
     /* Layout */
     main {
-      max-width: 960px;
+      max-width: 880px;
       margin: 0 auto;
       position: relative;
     }
@@ -62,7 +62,10 @@
       padding: 40px 0;
       border-bottom: 1px solid var(--border-color);
       margin-bottom: 40px;
-      position: relative;
+      position: sticky;
+      top: 0;
+      background: rgba(15, 15, 19, 0.95);
+      z-index: 10;
     }
 
     header::after {
@@ -79,12 +82,16 @@
     h1 {
       font-size: 2.5rem;
       margin-bottom: 15px;
+      position: relative;
+      display: inline-block;
+    }
+
+    /* Corrected gradient text effect */
+    .gradient-text {
       background: linear-gradient(90deg, var(--accent-color), #8a2be2, var(--accent-color));
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      position: relative;
-      display: inline-block;
     }
 
     h1::after {
@@ -128,6 +135,7 @@
       flex-direction: column;
       gap: 25px;
       margin: 40px 0;
+      counter-reset: step-counter;
     }
 
     .step {
@@ -140,20 +148,28 @@
       overflow: hidden;
     }
 
+    .step::before {
+      counter-increment: step-counter;
+      content: counter(step-counter);
+      position: absolute;
+      top: -15px;
+      right: -15px;
+      width: 40px;
+      height: 40px;
+      background: var(--accent-color);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+
     .step:hover {
       transform: translateY(-5px);
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
       border-left-color: var(--accent-color);
-    }
-
-    .step::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 4px;
-      background: linear-gradient(90deg, var(--accent-color), transparent);
     }
 
     .step h3 {
@@ -163,13 +179,6 @@
       display: flex;
       align-items: center;
       gap: 10px;
-    }
-
-    .step h3::before {
-      content: '•';
-      color: var(--accent-color);
-      font-size: 2rem;
-      line-height: 1;
     }
 
     /* Code block */
@@ -453,47 +462,50 @@
 <body>
   <main>
     <header>
-      <h1 class="fade-in-up">ai-dev — Autonomous Coding Agent</h1>
-      <p class="fade-in-up" style="animation-delay: 0.2s;">From a GitHub issue to a tested, auto-merged pull request — autonomously, on local models.</p>
+      <h1 class="gradient-text">ai-dev — Autonomous Coding Agent</h1>
+      <p>From a GitHub issue to a tested, auto-merged pull request — autonomously, on local models.</p>
+      <a href="https://github.com/Qureshi-Inc/ai-dev" class="btn">View Source Code</a>
     </header>
 
     <section>
-      <p class="fade-in-up" style="animation-delay: 0.4s;">ai-dev is a self-hosted agent. You open a GitHub issue, label it <code>ai-dev</code>, and it plans the work, writes the code, opens a pull request, runs CI, fixes its own failures, and auto-merges when tests pass — using local LLMs served by LM Studio, no cloud APIs.</p>
+      <p>You open a GitHub issue, label it <code>ai-dev</code>, and the agent plans the work, writes the
+        code, opens a pull request, runs CI, fixes its own failures, and auto-merges when tests pass —
+        using local LLMs served by LM Studio, with no cloud APIs.</p>
     </section>
 
     <section>
-      <h2 class="fade-in-up" style="animation-delay: 0.6s;">How it works</h2>
+      <h2>How it works</h2>
       <div class="flow-container">
-        <div class="step fade-in-up" style="animation-delay: 0.8s;">
+        <div class="step fade-in-up" style="animation-delay: 0.1s;">
           <h3>1. Issue Trigger</h3>
           <p>A GitHub issue is opened and labeled <code>ai-dev</code> (only allowlisted users can trigger it).</p>
         </div>
-        <div class="step fade-in-up" style="animation-delay: 1s;">
+        <div class="step fade-in-up" style="animation-delay: 0.2s;">
           <h3>2. Planning</h3>
           <p>The orchestrator parses the issue into a structured spec, then a step-by-step plan.</p>
         </div>
-        <div class="step fade-in-up" style="animation-delay: 1.2s;">
+        <div class="step fade-in-up" style="animation-delay: 0.3s;">
           <h3>3. Implementation</h3>
-          <p>It creates a branch <code>feature/issue-&lt;n&gt;</code>, implements the changes, commits, and pushes.</p>
+          <p>It creates a branch (named <code>feature/issue-&lt;n&gt;</code>), implements the changes, commits, and pushes.</p>
         </div>
-        <div class="step fade-in-up" style="animation-delay: 1.4s;">
+        <div class="step fade-in-up" style="animation-delay: 0.4s;">
           <h3>4. PR Creation</h3>
           <p>It opens a pull request; GitHub Actions runs the CI workflow.</p>
         </div>
-        <div class="step fade-in-up" style="animation-delay: 1.6s;">
+        <div class="step fade-in-up" style="animation-delay: 0.5s;">
           <h3>5. Fixing</h3>
-          <p>If CI fails: it fetches the CI logs, finds the root cause, applies a fix, and retries (up to 5 attempts).</p>
+          <p>If CI fails, it fetches the CI logs, finds the root cause, applies a fix, and retries (up to 5 times).</p>
         </div>
-        <div class="step fade-in-up" style="animation-delay: 1.8s;">
+        <div class="step fade-in-up" style="animation-delay: 0.6s;">
           <h3>6. Merge</h3>
           <p>When CI is green, it squash-merges the PR and can fire an optional deploy webhook.</p>
         </div>
       </div>
-      <p class="fade-in-up" style="animation-delay: 2s;">This page itself was produced by that pipeline — issue → PR → green CI → merge.</p>
+      <p>This page itself was produced by that pipeline.</p>
     </section>
 
     <section>
-      <h2 class="fade-in-up" style="animation-delay: 2.2s;">Models & routing</h2>
+      <h2>Models &amp; routing</h2>
       <table>
         <thead>
           <tr>
@@ -506,46 +518,48 @@
           <tr>
             <td>Code generation, file edits, issue parsing, planning</td>
             <td>Qwen3-Coder-30B-A3B (a 30B Mixture-of-Experts coder)</td>
-            <td>Strong at writing and editing code</td>
+            <td>Strong code generation</td>
           </tr>
           <tr>
             <td>CI-failure analysis, debugging, root-cause reasoning</td>
             <td>DeepSeek-Coder-V2-Lite</td>
-            <td>Focused diagnostic reasoning over logs</td>
+            <td>Focused diagnostic reasoning</td>
           </tr>
         </tbody>
       </table>
+      <div class="note">
+        <p>Both models run locally in LM Studio (OpenAI-compatible API) with just-in-time loading and an idle auto-unload TTL, so only the active model stays in memory.
+        A deterministic, rule-based router (no LLM) picks the model per task.</p>
+      </div>
     </section>
 
     <section>
-      <h2 class="fade-in-up" style="animation-delay: 2.4s;">Architecture & tech stack</h2>
-      <p class="fade-in-up" style="animation-delay: 2.6s;">Orchestrator: Node.js + TypeScript with an Express HTTP server.</p>
-      <p class="fade-in-up" style="animation-delay: 2.8s;">GitHub: a GitHub App with webhooks (issues + workflow runs) via Octokit.</p>
-      <p class="fade-in-up" style="animation-delay: 3s;">Ingress: webhooks arrive over a Cloudflare tunnel.</p>
-      <p class="fade-in-up" style="animation-delay: 3.2s;">State: SQLite — each issue is a job tracked through a state machine (<code>QUEUED → PARSING → PLANNING → IMPLEMENTING → PR_OPEN → CI_RUNNING → FIXING → MERGED / DEPLOYED / FAILED</code>).</p>
-      <p class="fade-in-up" style="animation-delay: 3.4s;">Git: clones, branches, commits, and pushes via the git CLI using short-lived tokens.</p>
-      <p class="fade-in-up" style="animation-delay: 3.6s;">Observability: structured logs; every model call (model, prompt, response, latency) is recorded.</p>
-      <p class="fade-in-up" style="animation-delay: 3.8s;">Packaging: runs as a Docker container next to the local model server.</p>
+      <h2>Architecture &amp; tech stack</h2>
+      <ul>
+        <li><strong>Orchestrator:</strong> Node.js + TypeScript with an Express HTTP server.</li>
+        <li><strong>GitHub:</strong> a GitHub App with webhooks (issues + workflow runs) via Octokit.</li>
+        <li><strong>Ingress:</strong> webhooks arrive over a Cloudflare tunnel.</li>
+        <li><strong>State:</strong> SQLite — each issue is a job in a state machine
+          (<code>QUEUED, PARSING, PLANNING, IMPLEMENTING, PR_OPEN, CI_RUNNING, FIXING, MERGED, DEPLOYED, FAILED</code>).</li>
+        <li><strong>Git:</strong> clones, branches, commits, and pushes via the git CLI using short-lived tokens.</li>
+        <li><strong>Observability:</strong> structured logs; every model call (model, prompt, response, latency) is recorded;
+          a live status comment is kept updated on both the issue and the PR.</li>
+        <li><strong>Packaging:</strong> runs as a Docker container next to the local model server.</li>
+      </ul>
     </section>
 
     <section>
-      <h2 class="fade-in-up" style="animation-delay: 4s;">Safety & guardrails</h2>
-      <div class="guardrail fade-in-up" style="animation-delay: 4.2s;">
-        <p>Max 5 fix attempts per issue; one active branch per issue.</p>
-      </div>
-      <div class="guardrail fade-in-up" style="animation-delay: 4.4s;">
-        <p>Never auto-merges unless every CI check is green.</p>
-      </div>
-      <div class="guardrail fade-in-up" style="animation-delay: 4.6s;">
-        <p>Repository allowlist (scoped to the org) and a trigger-user allowlist.</p>
-      </div>
-      <div class="guardrail fade-in-up" style="animation-delay: 4.8s;">
-        <p>Signature-verified webhooks; file patches are path-traversal guarded.</p>
-      </div>
+      <h2>Safety &amp; guardrails</h2>
+      <ul>
+        <li>Max 5 fix attempts per issue; one active branch per issue.</li>
+        <li>Never auto-merges unless every CI check is green.</li>
+        <li>Repository allowlist (scoped to the org) and a trigger-user allowlist.</li>
+        <li>Signature-verified webhooks; file patches are path-traversal guarded.</li>
+      </ul>
     </section>
 
-    <footer class="fade-in-up" style="animation-delay: 5s;">
-      <p>ai-dev · built and self-documented by the agent</p>
+    <footer>
+      <p><a href="https://github.com/Qureshi-Inc/ai-dev">View source code</a></p>
       <p>© 2024</p>
     </footer>
   </main>
