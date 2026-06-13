@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ai-dev Documentation</title>
+  <style>
+    /* Base styles */
+    :root {
+      --bg-primary: #0f0f13;
+      --bg-secondary: #1a1a20;
+      --text-primary: #e0e0ff;
+      --text-secondary: #a0a0c0;
+      --accent-color: #6a5acd;
+      --border-color: #333344;
+      --code-bg: #151520;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    /* Layout */
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      padding: 30px 0;
+      border-bottom: 1px solid var(--border-color);
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, var(--accent-color), #8a2be2);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin: 25px 0 15px;
+      color: var(--accent-color);
+    }
+
+    p {
+      margin-bottom: 15px;
+      font-size: 1rem;
+    }
+
+    /* Content sections */
+    .flow-container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      margin: 30px 0;
+    }
+
+    .step {
+      background: var(--bg-secondary);
+      border-left: 4px solid var(--accent-color);
+      padding: 15px;
+      border-radius: 0 8px 8px 0;
+    }
+
+    .step h3 {
+      margin-bottom: 10px;
+      color: #c0c0ff;
+    }
+
+    /* Code block */
+    pre {
+      background: var(--code-bg);
+      padding: 15px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 20px 0;
+      font-size: 0.9rem;
+    }
+
+    /* Tech stack */
+    .tech-stack {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin: 20px 0;
+    }
+
+    .tech-item {
+      background: var(--bg-secondary);
+      padding: 10px 15px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+
+    /* Note section */
+    .note {
+      background: rgba(106, 90, 205, 0.1);
+      border-left: 4px solid var(--accent-color);
+      padding: 20px;
+      margin: 30px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 30px 0;
+      margin-top: 30px;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    /* Responsive design */
+    @media (min-width: 768px) {
+      body {
+        padding: 40px 20px;
+      }
+
+      h1 {
+        font-size: 2.5rem;
+      }
+
+      .flow-container {
+        flex-direction: row;
+        justify-content: space-between;
+      }
+
+      .step {
+        width: calc(33% - 10px);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      main {
+        padding: 0 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>ai-dev Autonomous Agent System</h1>
+      <p>How an AI agent builds itself from GitHub issues to merged PRs</p>
+    </header>
+
+    <section>
+      <h2>How It Works</h2>
+      <div class="flow-container">
+        <div class="step">
+          <h3>1. Issue Analysis</h3>
+          <p>The agent analyzes GitHub issues to understand requirements and constraints.</p>
+        </div>
+        <div class="step">
+          <h3>2. Implementation Planning</h3>
+          <p>It creates a detailed plan for implementation, including code structure and dependencies.</p>
+        </div>
+        <div class="step">
+          <h3>3. Code Generation & PR Creation</h3>
+          <p>The agent generates the necessary code changes and submits them as a pull request.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Technical Approach</h2>
+      <p>This system demonstrates how an AI agent can autonomously develop software by:</p>
+      <ul>
+        <li>Reading and interpreting GitHub issues as requirements</li>
+        <li>Generating code that adheres to project conventions</li>
+        <li>Submitting pull requests for review and merging</li>
+      </ul>
+
+      <h3>Key Technologies Used:</h3>
+      <div class="tech-stack">
+        <span class="tech-item">GitHub API</span>
+        <span class="tech-item">Python</span>
+        <span class="tech-item">OpenAI GPT-4</span>
+        <span class="tech-item">Git Operations</span>
+        <span class="tech-item">Automated Testing</span>
+      </div>
+
+      <pre><code># Example workflow in pseudocode
+
+# 1. Monitor GitHub issues
+issues = github.get_issues(repo='ai-dev')
+for issue in issues:
+    # 2. Analyze and plan
+    plan = agent.plan_issue(issue)
+    
+    # 3. Generate code
+    code_changes = agent.generate_code(plan)
+    
+    # 4. Create PR
+    pr = github.create_pull_request(
+        title=plan.title,
+        body=plan.description,
+        files=code_changes
+    )</code></pre>
+    </section>
+
+    <div class="note">
+      <p><strong>Note:</strong> This documentation page is completely self-contained with no external dependencies. All CSS and JavaScript are inline, making it ready to run immediately.</p>
+    </div>
+
+    <footer>
+      <p>ai-dev Autonomous Agent System | Built with local LLMs</p>
+      <p>This system demonstrates AI autonomy in software development</p>
+    </footer>
+  </main>
+</body>
+</html>
