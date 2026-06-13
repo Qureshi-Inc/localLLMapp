@@ -1,0 +1,26 @@
+name: CI
+
+# Runs on pull requests (uses the workflow from the base branch) so the ai-dev
+# agent gets a green/red signal it can act on, and on pushes to main.
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: index.html exists
+        run: test -f index.html
+
+      - name: validate required HTML structure
+        run: |
+          set -e
+          grep -iq "<!doctype html" index.html
+          grep -iq "<html" index.html
+          grep -iq 'name="viewport"' index.html
+          grep -iq "<title" index.html
+          echo "index.html structure looks valid"
