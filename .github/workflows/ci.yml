@@ -1,7 +1,9 @@
 name: CI
 
-# Strict HTML validation so real markup bugs (unescaped tags like <n>, unknown
-# elements, malformed structure) fail CI and the ai-dev debug->fix loop corrects them.
+# Strict W3C (Nu) HTML validation: catches real markup bugs (unescaped tags like <n>,
+# unknown elements, malformed structure). CSS validation is intentionally NOT run --
+# the Nu CSS validator rejects valid, browser-supported modern CSS (e.g.
+# background-clip: text for gradient text), which causes false failures.
 on:
   pull_request:
   push:
@@ -25,7 +27,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: W3C (Nu) HTML + CSS validation
+      - name: W3C (Nu) HTML validation
         run: |
           python -m pip install --quiet html5validator
-          html5validator --root . --also-check-css
+          html5validator --root . --log INFO
