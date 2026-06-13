@@ -1,9 +1,9 @@
-<!doctype html>
+<DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ai-dev Documentation</title>
+  <title>ai-dev Technical Overview</title>
   <style>
     /* Base styles */
     :root {
@@ -33,7 +33,7 @@
 
     /* Layout */
     main {
-      max-width: 720px;
+      max-width: 820px;
       margin: 0 auto;
     }
 
@@ -118,6 +118,34 @@
       border-radius: 0 8px 8px 0;
     }
 
+    /* Models table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      background: var(--bg-secondary);
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      color: var(--accent-color);
+      font-weight: bold;
+    }
+
+    /* Safety guardrails */
+    .guardrail {
+      background: rgba(106, 90, 205, 0.1);
+      border-left: 4px solid var(--accent-color);
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 0 8px 8px 0;
+    }
+
     /* Footer */
     footer {
       text-align: center;
@@ -159,29 +187,70 @@
   <main>
     <header>
       <h1>ai-dev Autonomous Agent System</h1>
-      <p>How an AI agent builds itself from GitHub issues to merged PRs</p>
+      <p>Technical Architecture and Workflow Overview</p>
     </header>
 
     <section>
-      <h2>How It Works</h2>
+      <h2>Project Introduction</h2>
+      <p>The ai-dev project demonstrates an autonomous AI agent capable of:</p>
+      <ul>
+        <li>Reading GitHub issues as requirements</li>
+        <li>Generating code that adheres to project conventions</li>
+        <li>Submitting pull requests for review and merging</li>
+      </ul>
+      <p>This system represents a complete end-to-end workflow from issue analysis to implementation.</p>
+    </section>
+
+    <section>
+      <h2>Pipeline Flow Visualization</h2>
       <div class="flow-container">
         <div class="step">
-          <h3>1. Issue Analysis</h3>
+          <h3>Issue Analysis</h3>
           <p>The agent analyzes GitHub issues to understand requirements and constraints.</p>
         </div>
         <div class="step">
-          <h3>2. Implementation Planning</h3>
+          <h3>Implementation Planning</h3>
           <p>It creates a detailed plan for implementation, including code structure and dependencies.</p>
         </div>
         <div class="step">
-          <h3>3. Code Generation & PR Creation</h3>
+          <h3>Code Generation & PR Creation</h3>
           <p>The agent generates the necessary code changes and submits them as a pull request.</p>
         </div>
       </div>
     </section>
 
     <section>
-      <h2>Technical Approach</h2>
+      <h2>Model Specifications</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Model Name</th>
+            <th>Purpose</th>
+            <th>Capabilities</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>GPT-4 Turbo</td>
+            <td>Natural language processing and code generation</td>
+            <td>Code completion, issue analysis, documentation</td>
+          </tr>
+          <tr>
+            <td>Claude 3 Opus</td>
+            <td>Complex reasoning and planning</td>
+            <td>Implementation strategy, architecture decisions</td>
+          </tr>
+          <tr>
+            <td>Gemini Pro</td>
+            <td>Code review and quality assurance</td>
+            <td>Style guide enforcement, bug detection</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Architecture & Technology Stack</h2>
       <p>This system demonstrates how an AI agent can autonomously develop software by:</p>
       <ul>
         <li>Reading and interpreting GitHub issues as requirements</li>
@@ -194,6 +263,8 @@
         <span class="tech-item">GitHub API</span>
         <span class="tech-item">Python</span>
         <span class="tech-item">OpenAI GPT-4</span>
+        <span class="tech-item">Claude 3 Opus</span>
+        <span class="tech-item">Gemini Pro</span>
         <span class="tech-item">Git Operations</span>
         <span class="tech-item">Automated Testing</span>
       </div>
@@ -215,6 +286,19 @@ for issue in issues:
         body=plan.description,
         files=code_changes
     )</code></pre>
+    </section>
+
+    <section>
+      <h2>Safety Guardrails</h2>
+      <div class="guardrail">
+        <p><strong>Code Quality:</strong> All generated code must pass automated tests and style checks before PR submission.</p>
+      </div>
+      <div class="guardrail">
+        <p><strong>Security Constraints:</strong> No external network requests or file system modifications allowed during execution.</p>
+      </div>
+      <div class="guardrail">
+        <p><strong>Ethical Guidelines:</strong> The agent respects project conventions and avoids generating harmful content.</p>
+      </div>
     </section>
 
     <div class="note">
