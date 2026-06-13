@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -467,7 +468,9 @@
     </header>
 
     <section>
-      <p>You open a GitHub issue, label it <code>ai-dev</code>, and the agent plans the work, writes the code, opens a pull request, runs CI, fixes its own failures, and auto-merges when tests pass — using local LLMs served by LM Studio, with no cloud APIs.</p>
+      <p>You open a GitHub issue, label it <code>ai-dev</code>, and the agent plans the work, writes the
+        code, opens a pull request, runs CI, fixes its own failures, and auto-merges when tests pass —
+        using local LLMs served by LM Studio, with no cloud APIs.</p>
     </section>
 
     <section>
@@ -483,7 +486,7 @@
         </div>
         <div class="step">
           <h3>3. Implementation</h3>
-          <p>It creates a branch <code>feature/issue-&lt;n&gt;</code>, implements the changes, commits, and pushes.</p>
+          <p>It creates a branch (named <code>feature/issue-&lt;n&gt;</code>), implements the changes, commits, and pushes.</p>
         </div>
         <div class="step">
           <h3>4. PR Creation</h3>
@@ -491,7 +494,7 @@
         </div>
         <div class="step">
           <h3>5. Fixing</h3>
-          <p>If CI fails: it fetches the CI logs, finds the root cause, applies a fix, and retries (up to 5 attempts).</p>
+          <p>If CI fails, it fetches the CI logs, finds the root cause, applies a fix, and retries (up to 5 times).</p>
         </div>
         <div class="step">
           <h3>6. Merge</h3>
@@ -502,7 +505,7 @@
     </section>
 
     <section>
-      <h2>Models & routing</h2>
+      <h2>Models &amp; routing</h2>
       <table>
         <thead>
           <tr>
@@ -520,42 +523,39 @@
           <tr>
             <td>CI-failure analysis, debugging, root-cause reasoning</td>
             <td>DeepSeek-Coder-V2-Lite</td>
-            <td>Focused diagnostic reasoning over logs</td>
+            <td>Focused diagnostic reasoning</td>
           </tr>
         </tbody>
       </table>
       <div class="note">
-        <p>Both models run locally in LM Studio (OpenAI-compatible API) with just-in-time loading and an idle auto-unload TTL, so only the active model stays in memory. A deterministic, rule-based router (no LLM) picks the model per task.</p>
+        <p>Both models run locally in LM Studio (OpenAI-compatible API) with just-in-time loading and an idle auto-unload TTL, so only the active model stays in memory.
+        A deterministic, rule-based router (no LLM) picks the model per task.</p>
       </div>
     </section>
 
     <section>
-      <h2>Architecture & tech stack</h2>
+      <h2>Architecture &amp; tech stack</h2>
       <ul>
         <li><strong>Orchestrator:</strong> Node.js + TypeScript with an Express HTTP server.</li>
         <li><strong>GitHub:</strong> a GitHub App with webhooks (issues + workflow runs) via Octokit.</li>
         <li><strong>Ingress:</strong> webhooks arrive over a Cloudflare tunnel.</li>
-        <li><strong>State:</strong> SQLite — each issue is a job in a state machine (<code>QUEUED → PARSING → PLANNING → IMPLEMENTING → PR_OPEN → CI_RUNNING → FIXING → MERGED / DEPLOYED / FAILED</code>).</li>
+        <li><strong>State:</strong> SQLite — each issue is a job in a state machine
+          (<code>QUEUED, PARSING, PLANNING, IMPLEMENTING, PR_OPEN, CI_RUNNING, FIXING, MERGED, DEPLOYED, FAILED</code>).</li>
         <li><strong>Git:</strong> clones, branches, commits, and pushes via the git CLI using short-lived tokens.</li>
-        <li><strong>Observability:</strong> structured logs; every model call (model, prompt, response, latency) is recorded; a live status comment is kept updated on both the issue and the PR.</li>
+        <li><strong>Observability:</strong> structured logs; every model call (model, prompt, response, latency) is recorded;
+          a live status comment is kept updated on both the issue and the PR.</li>
         <li><strong>Packaging:</strong> runs as a Docker container next to the local model server.</li>
       </ul>
     </section>
 
     <section>
-      <h2>Safety & guardrails</h2>
-      <div class="guardrail">
-        <p>Max 5 fix attempts per issue; one active branch per issue.</p>
-      </div>
-      <div class="guardrail">
-        <p>Never auto-merges unless every CI check is green.</p>
-      </div>
-      <div class="guardrail">
-        <p>Repository allowlist (scoped to the org) and a trigger-user allowlist.</p>
-      </div>
-      <div class="guardrail">
-        <p>Signature-verified webhooks; file patches are path-traversal guarded.</p>
-      </div>
+      <h2>Safety &amp; guardrails</h2>
+      <ul>
+        <li>Max 5 fix attempts per issue; one active branch per issue.</li>
+        <li>Never auto-merges unless every CI check is green.</li>
+        <li>Repository allowlist (scoped to the org) and a trigger-user allowlist.</li>
+        <li>Signature-verified webhooks; file patches are path-traversal guarded.</li>
+      </ul>
     </section>
 
     <footer>
