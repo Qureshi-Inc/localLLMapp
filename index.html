@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -475,27 +476,27 @@
     <section>
       <h2>How it works</h2>
       <div class="flow-container">
-        <div class="step">
+        <div class="step fade-in-up" style="animation-delay: 0.1s;">
           <h3>1. Issue Trigger</h3>
           <p>A GitHub issue is opened and labeled <code>ai-dev</code> (only allowlisted users can trigger it).</p>
         </div>
-        <div class="step">
+        <div class="step fade-in-up" style="animation-delay: 0.2s;">
           <h3>2. Planning</h3>
           <p>The orchestrator parses the issue into a structured spec, then a step-by-step plan.</p>
         </div>
-        <div class="step">
+        <div class="step fade-in-up" style="animation-delay: 0.3s;">
           <h3>3. Implementation</h3>
           <p>It creates a branch (named <code>feature/issue-&lt;n&gt;</code>), implements the changes, commits, and pushes.</p>
         </div>
-        <div class="step">
+        <div class="step fade-in-up" style="animation-delay: 0.4s;">
           <h3>4. PR Creation</h3>
           <p>It opens a pull request; GitHub Actions runs the CI workflow.</p>
         </div>
-        <div class="step">
+        <div class="step fade-in-up" style="animation-delay: 0.5s;">
           <h3>5. Fixing</h3>
           <p>If CI fails, it fetches the CI logs, finds the root cause, applies a fix, and retries (up to 5 times).</p>
         </div>
-        <div class="step">
+        <div class="step fade-in-up" style="animation-delay: 0.6s;">
           <h3>6. Merge</h3>
           <p>When CI is green, it squash-merges the PR and can fire an optional deploy webhook.</p>
         </div>
