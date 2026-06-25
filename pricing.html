@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ai-dev — Product Overview</title>
+  <title>ai-dev — Pricing & Plans</title>
   <style>
     /* Base styles */
     :root {
@@ -184,20 +184,6 @@
       flex-shrink: 0;
     }
 
-    .github-link {
-      color: var(--text-primary);
-      text-decoration: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      transition: all var(--transition-speed) ease;
-      border: 1px solid var(--border-color);
-    }
-
-    .github-link:hover {
-      background: rgba(255, 255, 255, 0.05);
-      box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
-    }
-
     /* Hero section */
     .hero {
       text-align: center;
@@ -215,7 +201,7 @@
       height: 200%;
       background: 
         radial-gradient(circle, rgba(0, 255, 255, 0.05) 0%, transparent 70%),
-        repeating-dot-pattern;
+        var(--dot-pattern);
       z-index: -1;
     }
 
@@ -275,219 +261,97 @@
       line-height: 1.7;
     }
 
-    /* Flow container with pipeline */
-    .flow-container {
-      position: relative;
-      padding-left: 60px;
-      margin: 40px 0;
+    /* Pricing Grid */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 40px;
     }
 
-    .flow-line {
-      position: absolute;
-      left: 25px;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: linear-gradient(to bottom, var(--accent-gradient-start), var(--accent-gradient-end));
-      box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-    }
-
-    .step {
-      position: relative;
-      margin-bottom: 40px;
+    .pricing-card {
       background: var(--bg-secondary);
-      border-radius: 8px;
-      padding: 25px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
       border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
       transition: all var(--transition-speed) ease;
+      position: relative;
+      overflow: hidden;
     }
 
-    .step:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    .pricing-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
       border-color: rgba(0, 255, 255, 0.3);
     }
 
-    .step-number {
-      position: absolute;
-      left: -45px;
-      top: 25px;
-      width: 36px;
-      height: 36px;
-      background: linear-gradient(135deg, var(--accent-gradient-start), var(--accent-gradient-end));
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      box-shadow: 0 0 10px rgba(0, 255, 255, 0.4);
+    .pricing-card.featured {
+      border-color: var(--accent-gradient-start);
+      background: linear-gradient(180deg, rgba(0, 255, 255, 0.05) 0%, var(--bg-secondary) 100%);
     }
 
-    .step h3 {
-      margin-bottom: 15px;
+    .pricing-card.featured::before {
+      content: 'MOST POPULAR';
+      position: absolute;
+      top: 12px;
+      right: -30px;
+      background: var(--accent-gradient-start);
+      color: var(--bg-primary);
+      font-size: 0.7rem;
+      font-weight: bold;
+      padding: 4px 30px;
+      transform: rotate(45deg);
+    }
+
+    .plan-name {
+      font-size: 1.4rem;
+      font-weight: bold;
+      margin-bottom: 10px;
       color: var(--text-primary);
+    }
+
+    .price {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, var(--accent-gradient-start), var(--accent-gradient-end));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .price span {
+      font-size: 1rem;
+      font-weight: normal;
+      color: var(--text-secondary);
+      -webkit-text-fill-color: var(--text-secondary);
+    }
+
+    .features-list {
+      list-style: none;
+      margin-bottom: 30px;
+      flex-grow: 1;
+    }
+
+    .features-list li {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-color);
       display: flex;
       align-items: center;
       gap: 10px;
-      font-size: 1.3rem;
+      font-size: 0.95rem;
     }
 
-    /* Code block */
-    pre {
-      background: var(--code-bg);
-      padding: 20px;
-      border-radius: 8px;
-      overflow-x: auto;
-      margin: 25px 0;
-      font-size: 0.9rem;
-      position: relative;
-      border: 1px solid var(--border-color);
-    }
-
-    pre::before {
-      content: 'Code';
-      position: absolute;
-      top: -12px;
-      left: 15px;
-      background: var(--bg-secondary);
-      padding: 0 10px;
-      font-size: 0.8rem;
-      color: var(--accent-gradient-start);
-    }
-
-    /* Tech stack */
-    .tech-stack {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-      margin: 25px 0;
-      justify-content: center;
-    }
-
-    .tech-item {
-      background: var(--bg-secondary);
-      padding: 12px 20px;
-      border-radius: 8px;
-      font-size: 1rem;
-      transition: all var(--transition-speed) ease;
-      border: 1px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .tech-item:hover {
-      background: rgba(0, 255, 255, 0.1);
-      transform: translateY(-3px);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    /* Note section */
-    .note {
-      background: rgba(0, 255, 255, 0.08);
-      border-left: 3px solid var(--accent-gradient-start);
-      padding: 25px;
-      margin: 35px 0;
-      border-radius: 0 8px 8px 0;
-      position: relative;
-    }
-
-    .note::before {
-      content: '!';
-      position: absolute;
-      top: -15px;
-      left: -15px;
-      width: 30px;
-      height: 30px;
-      background: var(--warning-color);
-      color: white;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-    }
-
-    /* Models table */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 25px 0;
-      background: var(--bg-secondary);
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-
-    th, td {
-      padding: 20px;
-      text-align: left;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    th {
-      color: var(--accent-gradient-start);
-      font-weight: 600;
-      background: rgba(0, 255, 255, 0.08);
-      font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
-    }
-
-    tr:last-child td {
+    .features-list li:last-child {
       border-bottom: none;
     }
 
-    tr:hover {
-      background: rgba(0, 255, 255, 0.05);
-    }
-
-    .model-name {
-      font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
-      font-weight: bold;
-      color: var(--text-primary);
-    }
-
-    /* Safety guardrails */
-    .guardrail-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 20px;
-      margin-top: 30px;
-    }
-
-    .guardrail {
-      background: var(--bg-secondary);
-      border-radius: 8px;
-      padding: 25px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-      border: 1px solid var(--border-color);
-      transition: all var(--transition-speed) ease;
-    }
-
-    .guardrail:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-      border-color: rgba(76, 175, 80, 0.3);
-    }
-
-    .guardrail h3 {
+    .features-list li::before {
+      content: '✓';
       color: var(--success-color);
-      margin-bottom: 15px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      font-size: 1.2rem;
-    }
-
-    /* Footer */
-    footer {
-      text-align: center;
-      padding: 40px 0;
-      margin-top: 40px;
-      border-top: 1px solid var(--border-color);
-      font-size: 1rem;
-      color: var(--text-secondary);
+      font-weight: bold;
     }
 
     /* Buttons and interactive elements */
@@ -504,11 +368,52 @@
       cursor: pointer;
       transition: all var(--transition-speed) ease;
       margin: 5px;
+      text-align: center;
     }
 
     .btn:hover {
       transform: translateY(-2px);
       box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--accent-gradient-start);
+      color: var(--accent-gradient-start);
+    }
+
+    .btn-outline:hover {
+      background: rgba(0, 255, 255, 0.1);
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+    }
+
+    /* CTA Section */
+    .cta-section {
+      text-align: center;
+      padding: 60px 20px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      margin-top: 40px;
+      border: 1px solid var(--border-color);
+    }
+
+    .cta-section h2 {
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .cta-section h2::after {
+      display: none;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 40px 0;
+      margin-top: 40px;
+      border-top: 1px solid var(--border-color);
+      font-size: 1rem;
+      color: var(--text-secondary);
     }
 
     /* Responsive design */
@@ -537,16 +442,6 @@
       
       .hero h1 {
         font-size: 4rem;
-      }
-      
-      .flow-container {
-        padding-left: 80px;
-      }
-      
-      .step-number {
-        left: -65px;
-        width: 40px;
-        height: 40px;
       }
     }
 
@@ -599,9 +494,8 @@
       50% { opacity: 0.6; }
     }
 
-    repeating-dot-pattern {
-      background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-      background-size: 30px 30px;
+    :root {
+      --dot-pattern: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
     }
   </style>
 </head>
@@ -624,58 +518,79 @@
     <nav id="nav-menu" aria-label="Main navigation">
       <a href="index.html" class="nav-link">Home</a>
       <a href="product.html" class="nav-link">Product</a>
+      <a href="pricing.html" class="nav-link active">Pricing</a>
       <a href="https://github.com/Qureshi-Inc/ai-dev" class="nav-link" target="_blank" rel="noopener noreferrer">View Source Code</a>
     </nav>
   </header>
 
   <main>
     <section class="hero">
-      <h1>ai-dev — Product Overview</h1>
-      <p class="status-chip">AUTONOMOUS | LOCAL-FIRST | SELF-HEALING</p>
-      <p>A fully autonomous software delivery product that turns GitHub issues into production-ready code, tested and merged — entirely on local models.</p>
+      <h1>Simple, Transparent Pricing</h1>
+      <p class="status-chip">START FREE | SCALE AS YOU GROW</p>
+      <p>Choose the plan that fits your development workflow. All plans include local-first execution, self-healing CI, and enterprise-grade security.</p>
     </section>
 
     <section>
-      <h2>Purpose</h2>
-      <p>ai-dev is designed to eliminate the friction between idea and implementation. By leveraging local LLMs and a robust orchestration engine, it provides a self-contained, privacy-preserving software development lifecycle that operates without cloud dependencies or manual intervention.</p>
-    </section>
+      <h2>Choose Your Plan</h2>
+      <div class="pricing-grid">
+        <!-- Starter Plan -->
+        <div class="pricing-card fade-in-up" style="animation-delay: 0.1s;">
+          <div class="plan-name">Starter</div>
+          <div class="price">$0 <span>/ month</span></div>
+          <ul class="features-list">
+            <li>1 Active Issue at a time</li>
+            <li>Local LLM Execution</li>
+            <li>Basic CI Integration</li>
+            <li>Community Support</li>
+            <li>Standard Logging</li>
+          </ul>
+          <a href="#signup" class="btn btn-outline">Get Started</a>
+        </div>
 
-    <section>
-      <h2>Core Features</h2>
-      <div class="guardrail-grid">
-        <div class="guardrail">
-          <h3>🤖 Autonomous Planning</h3>
-          <p>Automatically parses GitHub issues into structured specs and step-by-step implementation plans.</p>
+        <!-- Pro Plan -->
+        <div class="pricing-card featured fade-in-up" style="animation-delay: 0.2s;">
+          <div class="plan-name">Pro</div>
+          <div class="price">$29 <span>/ month</span></div>
+          <ul class="features-list">
+            <li>Unlimited Active Issues</li>
+            <li>Priority Model Routing</li>
+            <li>Advanced Self-Healing CI</li>
+            <li>GitHub App Integration</li>
+            <li>Structured Observability</li>
+            <li>Email Support</li>
+          </ul>
+          <a href="#signup" class="btn">Sign Up Today</a>
         </div>
-        <div class="guardrail">
-          <h3>⚡ Local-First Execution</h3>
-          <p>Runs entirely on-premise using LM Studio. No cloud APIs, no data egress, complete privacy.</p>
-        </div>
-        <div class="guardrail">
-          <h3>🔄 Self-Healing CI</h3>
-          <p>Automatically detects CI failures, diagnoses root causes, applies fixes, and retries up to 5 times.</p>
-        </div>
-        <div class="guardrail">
-          <h3>🔒 Safety Guardrails</h3>
-          <p>Enforces strict access controls, branch limits, and auto-merge conditions only when all checks pass.</p>
+
+        <!-- Enterprise Plan -->
+        <div class="pricing-card fade-in-up" style="animation-delay: 0.3s;">
+          <div class="plan-name">Enterprise</div>
+          <div class="price">Custom</div>
+          <ul class="features-list">
+            <li>Dedicated Infrastructure</li>
+            <li>Custom Model Fine-tuning</li>
+            <li>SLA & Uptime Guarantees</li>
+            <li>On-Premise Deployment</li>
+            <li>24/7 Priority Support</li>
+            <li>Audit Logs & Compliance</li>
+          </ul>
+          <a href="#contact" class="btn btn-outline">Contact Sales</a>
         </div>
       </div>
     </section>
 
-    <section>
-      <h2>Value Proposition</h2>
-      <p>ai-dev transforms software delivery by reducing cycle times from days to minutes. It provides:</p>
-      <ul>
-        <li><strong>Zero Cloud Costs:</strong> All inference runs locally on your hardware.</li>
-        <li><strong>Enhanced Security:</strong> Code and prompts never leave your infrastructure.</li>
-        <li><strong>Developer Productivity:</strong> Engineers focus on high-level architecture while ai-dev handles implementation, testing, and merging.</li>
-        <li><strong>Reliability:</strong> Deterministic routing and rule-based safety checks ensure consistent, predictable outcomes.</li>
-      </ul>
+    <section class="cta-section">
+      <h2>Ready to Automate Your Workflow?</h2>
+      <p>Join teams shipping faster with autonomous coding agents. Sign up today and experience the future of local-first software delivery.</p>
+      <div style="margin-top: 30px;">
+        <a href="#signup" class="btn">Start Free Trial</a>
+        <a href="product.html" class="btn btn-outline">Learn More</a>
+      </div>
     </section>
 
     <footer>
       <p><a href="https://github.com/Qureshi-Inc/ai-dev">View source code</a></p>
-      <p>© 2024</p>
+      <p>© 2024 ai-dev</p>
     </footer>
   </main>
 
