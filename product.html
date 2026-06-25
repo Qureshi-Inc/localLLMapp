@@ -71,6 +71,85 @@
       top: 0;
       z-index: 100;
       border-bottom: 1px solid var(--border-color);
+      backdrop-filter: blur(10px);
+    }
+
+    .menu-toggle {
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 30px;
+      height: 21px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      z-index: 110;
+    }
+
+    .hamburger {
+      width: 100%;
+      height: 3px;
+      background: var(--text-primary);
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+
+    nav {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .nav-link {
+      color: var(--text-primary);
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      transition: all var(--transition-speed) ease;
+      border: 1px solid transparent;
+      font-size: 0.95rem;
+    }
+
+    .nav-link:hover, .nav-link:focus {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--border-color);
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+    }
+
+    @media (max-width: 600px) {
+      .menu-toggle {
+        display: flex;
+      }
+
+      nav {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background: var(--bg-secondary);
+        padding: 20px;
+        gap: 10px;
+        border-bottom: 1px solid var(--border-color);
+        transform: translateY(-10px);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      nav.active {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .nav-link {
+        width: 100%;
+        text-align: center;
+        border: 1px solid var(--border-color);
+      }
     }
 
     .logo {
@@ -507,8 +586,16 @@
 <body>
   <header>
     <div class="logo">ai-dev</div>
-    <a href="product.html" class="github-link">Product</a>
-    <a href="https://github.com/Qureshi-Inc/ai-dev" class="github-link">View Source Code</a>
+    <button class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-menu">
+      <span class="hamburger"></span>
+      <span class="hamburger"></span>
+      <span class="hamburger"></span>
+    </button>
+    <nav id="nav-menu" aria-label="Main navigation">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="product.html" class="nav-link">Product</a>
+      <a href="https://github.com/Qureshi-Inc/ai-dev" class="nav-link" target="_blank" rel="noopener noreferrer">View Source Code</a>
+    </nav>
   </header>
 
   <main>
@@ -561,5 +648,19 @@
       <p>© 2024</p>
     </footer>
   </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggle = document.querySelector('.menu-toggle');
+      const nav = document.querySelector('nav');
+      if (toggle && nav) {
+        toggle.addEventListener('click', () => {
+          const expanded = toggle.getAttribute('aria-expanded') === 'true';
+          toggle.setAttribute('aria-expanded', String(!expanded));
+          nav.classList.toggle('active');
+        });
+      }
+    });
+  </script>
 </body>
 </html>
