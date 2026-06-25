@@ -153,13 +153,9 @@
     }
 
     .logo {
-      font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
-      font-size: 1.5rem;
-      font-weight: bold;
-      background: linear-gradient(90deg, var(--accent-gradient-start), var(--accent-gradient-end));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
+      height: 32px;
+      width: auto;
+      display: block;
     }
 
     .github-link {
@@ -584,7 +580,15 @@
 </head>
 <body>
   <header>
-    <div class="logo">ai-dev</div>
+    <svg class="logo" viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ai-dev logo">
+      <defs>
+        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#00ffff" />
+          <stop offset="100%" stop-color="#9400d3" />
+        </linearGradient>
+      </defs>
+      <text x="10" y="28" font-family="ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace" font-size="24" font-weight="bold" fill="url(#logoGrad)">ai-dev</text>
+    </svg>
     <button class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-menu">
       <span class="hamburger"></span>
       <span class="hamburger"></span>
