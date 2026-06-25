@@ -71,6 +71,19 @@
       top: 0;
       z-index: 100;
       border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding: 10px 15px;
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .github-link {
+        margin-top: 5px;
+      }
     }
 
     .logo {
@@ -114,7 +127,7 @@
       height: 200%;
       background: 
         radial-gradient(circle, rgba(0, 255, 255, 0.05) 0%, transparent 70%),
-        repeating-dot-pattern;
+        var(--dot-pattern);
       z-index: -1;
     }
 
@@ -498,9 +511,8 @@
       50% { opacity: 0.6; }
     }
 
-    repeating-dot-pattern {
-      background-image: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-      background-size: 30px 30px;
+    :root {
+      --dot-pattern: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
     }
   </style>
 </head>
