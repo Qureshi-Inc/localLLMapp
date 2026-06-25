@@ -32,4 +32,25 @@ assert.ok(indexHtml.includes('href="product.html"'), 'index.html must contain na
 // 4. Page metadata
 assert.ok(productHtml.includes('<title>ai-dev — Product Overview</title>'), 'product.html must have correct title');
 
+// 5. No broken internal links
+const internalLinks = [...indexHtml.matchAll(/href="([^"]+)"/g), ...productHtml.matchAll(/href="([^"]+)"/g)]
+  .map(m => m[1])
+  .filter(link => !link.startsWith('http'));
+internalLinks.forEach(link => {
+  assert.ok(fs.existsSync(path.join(rootDir, link)), `Internal link ${link} should not be broken`);
+});
+
+// 6. Design system consistency (shared CSS variables)
+const commonVars = [
+  '--bg-primary', '--bg-secondary', '--text-primary', '--accent-gradient-start', '--border-color'
+];
+commonVars.forEach(variable => {
+  assert.ok(indexHtml.includes(variable), 'index.html should use design system variable ' + variable);
+  assert.ok(productHtml.includes(variable), 'product.html should use design system variable ' + variable);
+});
+
+// 7. Accessibility & console error prevention
+assert.ok(!indexHtml.includes('onerror=') && !productHtml.includes('onerror='), 'Pages should not use inline event handlers that cause console errors');
+assert.ok(indexHtml.includes('lang="en"') && productHtml.includes('lang="en"'), 'Pages should have valid lang attribute');
+
 console.log('✅ All tests passed!');
