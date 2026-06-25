@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ai-dev — Autonomous Coding Agent</title>
+  <title>ai-dev — Product Overview</title>
   <style>
     /* Base styles */
     :root {
@@ -513,119 +513,47 @@
 
   <main>
     <section class="hero">
-      <h1>ai-dev — Autonomous Coding Agent</h1>
-      <p class="status-chip">READY | LOCAL MODE | LM STUDIO</p>
-      <p>From a GitHub issue to a tested, auto-merged pull request — autonomously, on local models.</p>
+      <h1>ai-dev — Product Overview</h1>
+      <p class="status-chip">AUTONOMOUS | LOCAL-FIRST | SELF-HEALING</p>
+      <p>A fully autonomous software delivery product that turns GitHub issues into production-ready code, tested and merged — entirely on local models.</p>
     </section>
 
     <section>
-      <p>You open a GitHub issue, label it <code>ai-dev</code>, and the agent plans the work, writes the
-        code, opens a pull request, runs CI, fixes its own failures, and auto-merges when tests pass —
-        using local LLMs served by LM Studio, with no cloud APIs.</p>
+      <h2>Purpose</h2>
+      <p>ai-dev is designed to eliminate the friction between idea and implementation. By leveraging local LLMs and a robust orchestration engine, it provides a self-contained, privacy-preserving software development lifecycle that operates without cloud dependencies or manual intervention.</p>
     </section>
 
     <section>
-      <h2>How it works</h2>
-      <div class="flow-container">
-        <div class="flow-line"></div>
-        <div class="step fade-in-up" style="animation-delay: 0.1s;">
-          <div class="step-number">1</div>
-          <h3>Issue Trigger</h3>
-          <p>A GitHub issue is opened and labeled <code>ai-dev</code> (only allowlisted users can trigger it).</p>
-        </div>
-        <div class="step fade-in-up" style="animation-delay: 0.2s;">
-          <div class="step-number">2</div>
-          <h3>Planning</h3>
-          <p>The orchestrator parses the issue into a structured spec, then a step-by-step plan.</p>
-        </div>
-        <div class="step fade-in-up" style="animation-delay: 0.3s;">
-          <div class="step-number">3</div>
-          <h3>Implementation</h3>
-          <p>It creates a branch (named <code>feature/issue-&lt;n&gt;</code>), implements the changes, commits, and pushes.</p>
-        </div>
-        <div class="step fade-in-up" style="animation-delay: 0.4s;">
-          <div class="step-number">4</div>
-          <h3>PR Creation</h3>
-          <p>It opens a pull request; GitHub Actions runs the CI workflow.</p>
-        </div>
-        <div class="step fade-in-up" style="animation-delay: 0.5s;">
-          <div class="step-number">5</div>
-          <h3>Fixing</h3>
-          <p>If CI fails, it fetches the CI logs, finds the root cause, applies a fix, and retries (up to 5 times).</p>
-        </div>
-        <div class="step fade-in-up" style="animation-delay: 0.6s;">
-          <div class="step-number">6</div>
-          <h3>Merge</h3>
-          <p>When CI is green, it squash-merges the PR and can fire an optional deploy webhook.</p>
-        </div>
-      </div>
-      <p>This page itself was produced by that pipeline.</p>
-    </section>
-
-    <section>
-      <h2>Models &amp; routing</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Task</th>
-            <th>Model</th>
-            <th>Why</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Code generation, file edits, issue parsing, planning</td>
-            <td class="model-name">Qwen3-Coder-30B-A3B (a 30B Mixture-of-Experts coder)</td>
-            <td>Strong code generation</td>
-          </tr>
-          <tr>
-            <td>CI-failure analysis, debugging, root-cause reasoning</td>
-            <td class="model-name">DeepSeek-Coder-V2-Lite</td>
-            <td>Focused diagnostic reasoning</td>
-          </tr>
-        </tbody>
-      </table>
-      <div class="note">
-        <p>Both models run locally in LM Studio (OpenAI-compatible API) with just-in-time loading and an idle auto-unload TTL, so only the active model stays in memory.
-        A deterministic, rule-based router (no LLM) picks the model per task.</p>
-      </div>
-    </section>
-
-    <section>
-      <h2>Architecture &amp; tech stack</h2>
-      <ul>
-        <li><strong>Orchestrator:</strong> Node.js + TypeScript with an Express HTTP server.</li>
-        <li><strong>GitHub:</strong> a GitHub App with webhooks (issues + workflow runs) via Octokit.</li>
-        <li><strong>Ingress:</strong> webhooks arrive over a Cloudflare tunnel.</li>
-        <li><strong>State:</strong> SQLite — each issue is a job in a state machine
-          (<code>QUEUED, PARSING, PLANNING, IMPLEMENTING, PR_OPEN, CI_RUNNING, FIXING, MERGED, DEPLOYED, FAILED</code>).</li>
-        <li><strong>Git:</strong> clones, branches, commits, and pushes via the git CLI using short-lived tokens.</li>
-        <li><strong>Observability:</strong> structured logs; every model call (model, prompt, response, latency) is recorded;
-          a live status comment is kept updated on both the issue and the PR.</li>
-        <li><strong>Packaging:</strong> runs as a Docker container next to the local model server.</li>
-      </ul>
-    </section>
-
-    <section>
-      <h2>Safety &amp; guardrails</h2>
+      <h2>Core Features</h2>
       <div class="guardrail-grid">
         <div class="guardrail">
-          <h3>🔒 Max Attempts</h3>
-          <p>Max 5 fix attempts per issue; one active branch per issue.</p>
+          <h3>🤖 Autonomous Planning</h3>
+          <p>Automatically parses GitHub issues into structured specs and step-by-step implementation plans.</p>
         </div>
         <div class="guardrail">
-          <h3>🔒 Auto-Merge Safety</h3>
-          <p>Never auto-merges unless every CI check is green.</p>
+          <h3>⚡ Local-First Execution</h3>
+          <p>Runs entirely on-premise using LM Studio. No cloud APIs, no data egress, complete privacy.</p>
         </div>
         <div class="guardrail">
-          <h3>🔒 Access Control</h3>
-          <p>Repository allowlist (scoped to the org) and a trigger-user allowlist.</p>
+          <h3>🔄 Self-Healing CI</h3>
+          <p>Automatically detects CI failures, diagnoses root causes, applies fixes, and retries up to 5 times.</p>
         </div>
         <div class="guardrail">
-          <h3>🔒 Security</h3>
-          <p>Signature-verified webhooks; file patches are path-traversal guarded.</p>
+          <h3>🔒 Safety Guardrails</h3>
+          <p>Enforces strict access controls, branch limits, and auto-merge conditions only when all checks pass.</p>
         </div>
       </div>
+    </section>
+
+    <section>
+      <h2>Value Proposition</h2>
+      <p>ai-dev transforms software delivery by reducing cycle times from days to minutes. It provides:</p>
+      <ul>
+        <li><strong>Zero Cloud Costs:</strong> All inference runs locally on your hardware.</li>
+        <li><strong>Enhanced Security:</strong> Code and prompts never leave your infrastructure.</li>
+        <li><strong>Developer Productivity:</strong> Engineers focus on high-level architecture while ai-dev handles implementation, testing, and merging.</li>
+        <li><strong>Reliability:</strong> Deterministic routing and rule-based safety checks ensure consistent, predictable outcomes.</li>
+      </ul>
     </section>
 
     <footer>
