@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ai-dev — Pricing & Plans</title>
+  <style>
+    /* Base styles */
+    :root {
+      --bg-primary: #0b0d12;
+      --bg-secondary: #12151c;
+      --bg-tertiary: #161a23;
+      --text-primary: #e0e0ff;
+      --text-secondary: #a0a0c0;
+      --accent-gradient-start: #00ffff;
+      --accent-gradient-end: #9400d3;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --code-bg: #0f121a;
+      --success-color: #4caf50;
+      --warning-color: #ff9800;
+      --error-color: #f44336;
+      --transition-speed: 0.3s;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      padding: 0;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 10% 20%, rgba(0, 255, 255, 0.03) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(148, 0, 211, 0.03) 0%, transparent 20%);
+      z-index: -1;
+    }
+
+    /* Layout */
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      position: relative;
+      padding: 20px;
+    }
+
+    /* Top bar */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 30px;
+      background: rgba(11, 13, 18, 0.95);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid var(--border-color);
+      backdrop-filter: blur(10px);
+      gap: 16px;
+    }
+
+    .menu-toggle {
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      width: 30px;
+      height: 21px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      z-index: 110;
+      transition: transform 0.2s ease;
+    }
+
+    .menu-toggle:focus-visible {
+      outline: 2px solid var(--accent-gradient-start);
+      outline-offset: 2px;
+    }
+
+    .hamburger {
+      width: 100%;
+      height: 3px;
+      background: var(--text-primary);
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+
+    .menu-toggle.active .hamburger:nth-child(1) {
+      transform: translateY(9px) rotate(45deg);
+    }
+
+    .menu-toggle.active .hamburger:nth-child(2) {
+      opacity: 0;
+    }
+
+    .menu-toggle.active .hamburger:nth-child(3) {
+      transform: translateY(-9px) rotate(-45deg);
+    }
+
+    nav {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .nav-link {
+      color: var(--text-primary);
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      transition: all var(--transition-speed) ease;
+      border: 1px solid transparent;
+      font-size: 0.95rem;
+    }
+
+    .nav-link:hover, .nav-link:focus {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: var(--border-color);
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+    }
+
+    .nav-link.active {
+      background: rgba(0, 255, 255, 0.1);
+      border-color: var(--accent-gradient-start);
+      color: var(--accent-gradient-start);
+    }
+
+    @media (max-width: 600px) {
+      .menu-toggle {
+        display: flex;
+      }
+
+      nav {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background: var(--bg-secondary);
+        padding: 20px;
+        gap: 10px;
+        border-bottom: 1px solid var(--border-color);
+        transform: translateY(-10px);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      nav.active {
+        transform: translateY(0);
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .nav-link {
+        width: 100%;
+        text-align: center;
+        border: 1px solid var(--border-color);
+      }
+    }
+
+    .logo {
+      height: 32px;
+      width: 96px;
+      display: block;
+      flex-shrink: 0;
+    }
+
+    /* Hero section */
+    .hero {
+      text-align: center;
+      padding: 60px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: 
+        radial-gradient(circle, rgba(0, 255, 255, 0.05) 0%, transparent 70%),
+        var(--dot-pattern);
+      z-index: -1;
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      margin-bottom: 20px;
+      position: relative;
+      display: inline-block;
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      max-width: 700px;
+      margin: 0 auto 30px;
+      line-height: 1.7;
+    }
+
+    .status-chip {
+      display: inline-block;
+      background: rgba(0, 255, 255, 0.1);
+      color: var(--accent-gradient-start);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+      font-size: 0.9rem;
+      letter-spacing: 0.5px;
+      margin-bottom: 30px;
+      border: 1px solid rgba(0, 255, 255, 0.2);
+    }
+
+    /* Content sections */
+    section {
+      padding: 40px 0;
+      border-top: 1px solid var(--border-color);
+    }
+
+    h2 {
+      font-size: 1.8rem;
+      margin-bottom: 30px;
+      color: var(--accent-gradient-start);
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    h2::after {
+      content: '';
+      flex-grow: 1;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent-gradient-start), transparent);
+    }
+
+    p {
+      margin-bottom: 20px;
+      font-size: 1.1rem;
+      line-height: 1.7;
+    }
+
+    /* Pricing Grid */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-top: 40px;
+    }
+
+    .pricing-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      transition: all var(--transition-speed) ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+      border-color: rgba(0, 255, 255, 0.3);
+    }
+
+    .pricing-card.featured {
+      border-color: var(--accent-gradient-start);
+      background: linear-gradient(180deg, rgba(0, 255, 255, 0.05) 0%, var(--bg-secondary) 100%);
+    }
+
+    .pricing-card.featured::before {
+      content: 'MOST POPULAR';
+      position: absolute;
+      top: 12px;
+      right: -30px;
+      background: var(--accent-gradient-start);
+      color: var(--bg-primary);
+      font-size: 0.7rem;
+      font-weight: bold;
+      padding: 4px 30px;
+      transform: rotate(45deg);
+    }
+
+    .plan-name {
+      font-size: 1.4rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: var(--text-primary);
+    }
+
+    .price {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, var(--accent-gradient-start), var(--accent-gradient-end));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .price span {
+      font-size: 1rem;
+      font-weight: normal;
+      color: var(--text-secondary);
+      -webkit-text-fill-color: var(--text-secondary);
+    }
+
+    .features-list {
+      list-style: none;
+      margin-bottom: 30px;
+      flex-grow: 1;
+    }
+
+    .features-list li {
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.95rem;
+    }
+
+    .features-list li:last-child {
+      border-bottom: none;
+    }
+
+    .features-list li::before {
+      content: '✓';
+      color: var(--success-color);
+      font-weight: bold;
+    }
+
+    /* Buttons and interactive elements */
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, var(--accent-gradient-start), var(--accent-gradient-end));
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 1rem;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all var(--transition-speed) ease;
+      margin: 5px;
+      text-align: center;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 255, 255, 0.4);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--accent-gradient-start);
+      color: var(--accent-gradient-start);
+    }
+
+    .btn-outline:hover {
+      background: rgba(0, 255, 255, 0.1);
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+    }
+
+    /* CTA Section */
+    .cta-section {
+      text-align: center;
+      padding: 60px 20px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      margin-top: 40px;
+      border: 1px solid var(--border-color);
+    }
+
+    .cta-section h2 {
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .cta-section h2::after {
+      display: none;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      padding: 40px 0;
+      margin-top: 40px;
+      border-top: 1px solid var(--border-color);
+      font-size: 1rem;
+      color: var(--text-secondary);
+    }
+
+    /* Responsive design */
+    @media (min-width: 768px) {
+      main {
+        padding: 30px;
+      }
+      
+      .hero h1 {
+        font-size: 3.5rem;
+      }
+      
+      .hero p {
+        font-size: 1.3rem;
+      }
+      
+      section {
+        padding: 50px 0;
+      }
+    }
+
+    @media (min-width: 1024px) {
+      main {
+        padding: 40px;
+      }
+      
+      .hero h1 {
+        font-size: 4rem;
+      }
+    }
+
+    /* Animation for loading */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in-up {
+      animation: fadeInUp 0.6s ease-out forwards;
+    }
+
+    /* Accessibility */
+    :focus-visible {
+      outline: 2px solid var(--accent-gradient-start);
+      outline-offset: 2px;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Custom CSS for background texture */
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.6; }
+    }
+
+    :root {
+      --dot-pattern: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <svg class="logo" viewBox="0 0 120 40" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ai-dev logo">
+      <defs>
+        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#00ffff" />
+          <stop offset="100%" stop-color="#9400d3" />
+        </linearGradient>
+      </defs>
+      <text x="10" y="28" font-family="ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, Consolas, monospace" font-size="24" font-weight="bold" fill="url(#logoGrad)">ai-dev</text>
+    </svg>
+    <button class="menu-toggle" aria-label="Toggle navigation" aria-expanded="false" aria-controls="nav-menu">
+      <span class="hamburger"></span>
+      <span class="hamburger"></span>
+      <span class="hamburger"></span>
+    </button>
+    <nav id="nav-menu" aria-label="Main navigation">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="product.html" class="nav-link">Product</a>
+      <a href="pricing.html" class="nav-link active">Pricing</a>
+      <a href="https://github.com/Qureshi-Inc/ai-dev" class="nav-link" target="_blank" rel="noopener noreferrer">View Source Code</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1>Simple, Transparent Pricing</h1>
+      <p class="status-chip">START FREE | SCALE AS YOU GROW</p>
+      <p>Choose the plan that fits your development workflow. All plans include local-first execution, self-healing CI, and enterprise-grade security.</p>
+    </section>
+
+    <section>
+      <h2>Choose Your Plan</h2>
+      <div class="pricing-grid">
+        <!-- Starter Plan -->
+        <div class="pricing-card fade-in-up" style="animation-delay: 0.1s;">
+          <div class="plan-name">Starter</div>
+          <div class="price">$0 <span>/ month</span></div>
+          <ul class="features-list">
+            <li>1 Active Issue at a time</li>
+            <li>Local LLM Execution</li>
+            <li>Basic CI Integration</li>
+            <li>Community Support</li>
+            <li>Standard Logging</li>
+          </ul>
+          <a href="#signup" class="btn btn-outline">Get Started</a>
+        </div>
+
+        <!-- Pro Plan -->
+        <div class="pricing-card featured fade-in-up" style="animation-delay: 0.2s;">
+          <div class="plan-name">Pro</div>
+          <div class="price">$29 <span>/ month</span></div>
+          <ul class="features-list">
+            <li>Unlimited Active Issues</li>
+            <li>Priority Model Routing</li>
+            <li>Advanced Self-Healing CI</li>
+            <li>GitHub App Integration</li>
+            <li>Structured Observability</li>
+            <li>Email Support</li>
+          </ul>
+          <a href="#signup" class="btn">Sign Up Today</a>
+        </div>
+
+        <!-- Enterprise Plan -->
+        <div class="pricing-card fade-in-up" style="animation-delay: 0.3s;">
+          <div class="plan-name">Enterprise</div>
+          <div class="price">Custom</div>
+          <ul class="features-list">
+            <li>Dedicated Infrastructure</li>
+            <li>Custom Model Fine-tuning</li>
+            <li>SLA & Uptime Guarantees</li>
+            <li>On-Premise Deployment</li>
+            <li>24/7 Priority Support</li>
+            <li>Audit Logs & Compliance</li>
+          </ul>
+          <a href="#contact" class="btn btn-outline">Contact Sales</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="cta-section">
+      <h2>Ready to Automate Your Workflow?</h2>
+      <p>Join teams shipping faster with autonomous coding agents. Sign up today and experience the future of local-first software delivery.</p>
+      <div style="margin-top: 30px;">
+        <a href="#signup" class="btn">Start Free Trial</a>
+        <a href="product.html" class="btn btn-outline">Learn More</a>
+      </div>
+    </section>
+
+    <footer>
+      <p><a href="https://github.com/Qureshi-Inc/ai-dev">View source code</a></p>
+      <p>© 2024 ai-dev</p>
+    </footer>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggle = document.querySelector('.menu-toggle');
+      const nav = document.querySelector('nav');
+      if (toggle && nav) {
+        toggle.addEventListener('click', () => {
+          const expanded = toggle.getAttribute('aria-expanded') === 'true';
+          toggle.setAttribute('aria-expanded', String(!expanded));
+          toggle.classList.toggle('active');
+          nav.classList.toggle('active');
+        });
+      }
+    });
+  </script>
+</body>
+</html>
