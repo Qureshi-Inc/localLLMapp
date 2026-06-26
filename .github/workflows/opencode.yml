@@ -30,3 +30,10 @@ jobs:
           OMLX_API_KEY: ${{ secrets.OMLX_API_KEY }}
         with:
           model: omlx/Qwen3.6-35B-A3B-MLX-8bit
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run actionlint
+        uses: rhysd/actionlint@v1
