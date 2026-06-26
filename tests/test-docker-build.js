@@ -24,4 +24,13 @@ assert.ok(dockerfileContent.includes('WORKDIR /app'), 'Dockerfile should set wor
 assert.ok(dockerfileContent.includes('EXPOSE 3000'), 'Dockerfile should expose port 3000');
 assert.ok(dockerfileContent.includes('CMD ["node", "server.js"]'), 'Dockerfile should run Next.js standalone server');
 
+// 4. Verify no COPY instructions reference non-existent paths
+const copyLines = dockerfileContent.split('\n').filter(line => line.trim().startsWith('COPY'));
+copyLines.forEach(line => {
+  assert.ok(
+    !line.includes('/app/public'),
+    'Dockerfile should not COPY non-existent path: /app/public'
+  );
+});
+
 console.log('✅ All Docker build integration tests passed!');
