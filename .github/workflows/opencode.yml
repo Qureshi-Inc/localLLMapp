@@ -26,8 +26,6 @@ jobs:
           persist-credentials: false
       - name: Run opencode
         uses: anomalyco/opencode/github@latest
-        env:
-          OMLX_API_KEY: ${{ secrets.OMLX_API_KEY }}
         with:
           model: omlx/Qwen3.6-35B-A3B-MLX-8bit
 
