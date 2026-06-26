@@ -39,4 +39,17 @@ assert.ok(opencodeStep, 'Opencode step should be present');
 const opencodeWithBlock = opencodeStep[0];
 assert.ok(!opencodeWithBlock.includes('api_key') && !opencodeWithBlock.includes('token'), 'Opencode step should not pass API credentials in with block');
 
+// 5. Verify opencode.yml parses as valid YAML
+try {
+  const yaml = require('js-yaml');
+  yaml.load(workflowContent);
+  console.log('✅ opencode.yml parses as valid YAML');
+} catch (e) {
+  if (e.code === 'MODULE_NOT_FOUND') {
+    console.warn('⚠️ js-yaml not installed, skipping YAML validation. Install it with: npm install js-yaml');
+  } else {
+    assert.fail(`opencode.yml failed to parse as valid YAML: ${e.message}`);
+  }
+}
+
 console.log('✅ All workflow integration tests passed!');
