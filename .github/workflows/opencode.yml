@@ -28,6 +28,7 @@ jobs:
         uses: anomalyco/opencode/github@latest
         with:
           model: omlx/Qwen3.6-35B-A3B-MLX-8bit
+          # Authentication is handled by the local runner's opencode config.
 
   lint:
     runs-on: ubuntu-latest
