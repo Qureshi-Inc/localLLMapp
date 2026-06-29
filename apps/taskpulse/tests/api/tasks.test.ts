@@ -1,14 +1,35 @@
+/*
+ * @jest-environment node
+ */
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { GET, POST } from '@/app/api/tasks/route';
-import { PATCH, DELETE } from '@/app/api/tasks/[id]/route';
 
 // Mock the database module
-jest.mock('@/lib/db', () => ({
-  getTasks: jest.fn(() => Promise.resolve([])),
-  createTask: jest.fn((task) => Promise.resolve({ id: '1', ...task, createdAt: new Date().toISOString() })),
-  updateTask: jest.fn(() => Promise.resolve({ id: '123', status: 'In Progress' })),
-  deleteTask: jest.fn(() => Promise.resolve(true)),
-}));
+jest.mock('@/lib/db', () => {
+  const mockGetTasks = jest.fn(() => Promise.resolve([]));
+  const mockCreateTask = jest.fn((task) => Promise.resolve({ id: '1', ...task, createdAt: new Date().toISOString() }));
+  const mockUpdateTask = jest.fn((_id, _updates) => Promise.resolve({ id: '123', status: 'In Progress' }));
+  const mockDeleteTask = jest.fn((_id) => Promise.resolve(true));
+
+  return {
+    getTasks: mockGetTasks,
+    createTask: mockCreateTask,
+    updateTask: mockUpdateTask,
+    deleteTask: mockDeleteTask,
+    __esModule: true,
+  };
+});
+
+import { GET, POST } from '@/app/api/tasks/route';
+
+let PATCH: typeof import('@/app/api/tasks/[id]/route')['PATCH'];
+let DELETE: typeof import('@/app/api/tasks/[id]/route')['DELETE'];
+
+beforeEach(async () => {
+  // Re-import route handlers to get fresh mocks
+  const mod = await import('@/app/api/tasks/[id]/route');
+  PATCH = mod.PATCH;
+  DELETE = mod.DELETE;
+});
 
 describe('API Routes', () => {
   beforeEach(() => {

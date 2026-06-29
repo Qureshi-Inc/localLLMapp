@@ -12,4 +12,7 @@ const customJestConfig = {
   },
 };
 
+// Ensure React is loaded in development mode for tests
+process.env.NODE_ENV = 'development';
+
 module.exports = createJestConfig(customJestConfig);
