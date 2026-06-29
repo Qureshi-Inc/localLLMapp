@@ -11,14 +11,22 @@ interface Task {
   createdAt: string;
 }
 
+const STATUS_CYCLE: Record<string, string> = {
+  'Todo': 'In Progress',
+  'In Progress': 'Done',
+  'Done': 'Todo',
+};
+
 export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTasks = async () => {
       try {
         const res = await fetch('/api/tasks');
+        if (!res.ok) throw new Error('Failed to fetch tasks');
         const data = await res.json();
         setTasks(data);
       } catch {
@@ -34,6 +42,31 @@ export default function DashboardPage() {
   const inProgressCount = tasks.filter(t => t.status === 'In Progress').length;
   const doneCount = tasks.filter(t => t.status === 'Done').length;
 
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete task');
+      setTasks(prev => prev.filter(t => t.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete task');
+    }
+  };
+
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
+    const newStatus = (STATUS_CYCLE[currentStatus] || 'Todo') as 'Todo' | 'In Progress' | 'Done';
+    try {
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) throw new Error('Failed to update task status');
+      setTasks(prev => prev.map(t => t.id === id ? { ...t, status: newStatus } : t));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update task status');
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-10 text-gray-500">Loading dashboard...</div>;
   }
@@ -41,6 +74,12 @@ export default function DashboardPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
@@ -77,6 +116,20 @@ export default function DashboardPage() {
                 }`}>
                   {task.status}
                 </span>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleToggleStatus(task.id, task.status)}
+                  className="px-3 py-1 text-sm bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition"
+                >
+                  {task.status === 'Done' ? 'Reopen' : 'Complete'}
+                </button>
+                <button
+                  onClick={() => handleDelete(task.id)}
+                  className="px-3 py-1 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition"
+                >
+                  Delete
+                </button>
               </div>
             </div>
           ))}

@@ -11,14 +11,22 @@ interface Task {
   createdAt: string;
 }
 
+const STATUS_CYCLE: Record<string, string> = {
+  'Todo': 'In Progress',
+  'In Progress': 'Done',
+  'Done': 'Todo',
+};
+
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchTasks = async () => {
     try {
       const res = await fetch('/api/tasks');
+      if (!res.ok) throw new Error('Failed to fetch tasks');
       const data = await res.json();
       setTasks(data);
     } catch {
@@ -33,33 +41,57 @@ export default function TasksPage() {
   }, []);
 
   const handleCreate = async (task: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done' }) => {
-    const res = await fetch('/api/tasks', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(task),
-    });
-    if (res.ok) {
-      fetchTasks();
+    try {
+      const res = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(task),
+      });
+      if (!res.ok) throw new Error('Failed to create task');
+      await fetchTasks();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create task');
     }
   };
 
   const handleUpdate = async (task: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done' }) => {
     if (!editingTask) return;
-    const res = await fetch(`/api/tasks/${editingTask.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(task),
-    });
-    if (res.ok) {
+    try {
+      const res = await fetch(`/api/tasks/${editingTask.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(task),
+      });
+      if (!res.ok) throw new Error('Failed to update task');
       setEditingTask(null);
-      fetchTasks();
+      await fetchTasks();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update task');
     }
   };
 
   const handleDelete = async (id: string) => {
-    const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
-    if (res.ok) {
-      fetchTasks();
+    try {
+      const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete task');
+      setTasks(prev => prev.filter(t => t.id !== id));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete task');
+    }
+  };
+
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
+    const newStatus = (STATUS_CYCLE[currentStatus] || 'Todo') as 'Todo' | 'In Progress' | 'Done';
+    try {
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) throw new Error('Failed to update task status');
+      setTasks(prev => prev.map(t => t.id === id ? { ...t, status: newStatus } : t));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update task status');
     }
   };
 
@@ -70,6 +102,12 @@ export default function TasksPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <h1 className="text-3xl font-bold text-gray-900">Tasks</h1>
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
 
       {editingTask ? (
         <TaskForm
@@ -99,6 +137,12 @@ export default function TasksPage() {
                 </span>
               </div>
               <div className="flex gap-2">
+                <button
+                  onClick={() => handleToggleStatus(task.id, task.status)}
+                  className="px-3 py-1 text-sm bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition"
+                >
+                  {task.status === 'Done' ? 'Reopen' : 'Complete'}
+                </button>
                 <button
                   onClick={() => setEditingTask(task)}
                   className="px-3 py-1 text-sm bg-indigo-50 text-indigo-600 rounded-lg hover:bg-indigo-100 transition"
