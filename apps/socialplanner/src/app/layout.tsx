@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ClientRoot from "./ClientRoot";
 
 export const metadata: Metadata = {
   title: "SocialPlanner",
@@ -13,7 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ClientRoot>{children}</ClientRoot>
+      </body>
     </html>
   );
 }

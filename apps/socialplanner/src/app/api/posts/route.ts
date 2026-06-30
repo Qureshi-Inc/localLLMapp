@@ -11,7 +11,7 @@ function isValidISODate(str: string): boolean {
 
 export async function GET() {
   try {
-    const { userId } = requireAuth();
+    const { userId } = await requireAuth();
     const posts = await getPostsByUser(userId);
     return NextResponse.json(posts, { status: 200 });
   } catch (error) {
@@ -21,7 +21,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { userId } = requireAuth();
+    const { userId } = await requireAuth();
     const body = await request.json();
 
     const { title, caption, platform, status, scheduledAt, campaign, notes, imageUrl } = body;
