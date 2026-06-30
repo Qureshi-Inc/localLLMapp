@@ -11,12 +11,12 @@ interface NavItem {
 }
 
 export default function Navbar() {
-  const { session, isAuthenticated, isLoading, signOut } = useSession();
+  const { user, loading, logout } = useSession();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
-    await signOut();
+    await logout();
     setMobileMenuOpen(false);
   };
 
@@ -31,7 +31,7 @@ export default function Navbar() {
   ];
 
   const getNavItems = () => {
-    if (isAuthenticated && session) {
+    if (user) {
       return authNavItems;
     }
     return publicNavItems;
@@ -55,7 +55,7 @@ export default function Navbar() {
           </div>
 
           <div className="hidden md:flex items-center gap-1">
-            {isLoading ? (
+            {loading ? (
               <div className="flex items-center gap-2">
                 <svg className="animate-spin h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -63,7 +63,7 @@ export default function Navbar() {
                 </svg>
                 <span className="text-sm text-gray-400">Loading...</span>
               </div>
-            ) : isAuthenticated && session ? (
+            ) : user ? (
               <>
                 {getNavItems().map((item) => (
                   <Link
@@ -80,7 +80,7 @@ export default function Navbar() {
                 ))}
                 <div className="flex items-center gap-3 pl-3 border-l border-gray-200 ml-2">
                   <span className="text-sm text-gray-600">
-                    {session.name}
+                    {user.name}
                   </span>
                   <button
                     onClick={handleLogout}
@@ -153,7 +153,7 @@ export default function Navbar() {
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-gray-200">
             <div className="px-2 pt-2 pb-3 space-y-1">
-              {isLoading ? (
+              {loading ? (
                 <div className="flex items-center gap-2 px-3 py-2 text-sm text-gray-400">
                   <svg className="animate-spin h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -161,7 +161,7 @@ export default function Navbar() {
                   </svg>
                   Loading...
                 </div>
-              ) : isAuthenticated && session ? (
+              ) : user ? (
                 <>
                   {getNavItems().map((item) => (
                     <Link
@@ -179,7 +179,7 @@ export default function Navbar() {
                   ))}
                   <div className="border-t border-gray-200 my-2" />
                   <div className="px-3 py-2 text-sm text-gray-500">
-                    {session.name}
+                    {user.name}
                   </div>
                   <button
                     onClick={handleLogout}
