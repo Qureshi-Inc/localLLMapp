@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-import { validateSession } from '@/lib/session';
+import { getSession } from '@/lib/session';
 
 const PUBLIC_PATHS = ['/login', '/register', '/api/health'];
 const PUBLIC_API_PREFIX = '/api/auth';
@@ -23,7 +23,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     return NextResponse.next();
   }
 
-  const session = await validateSession();
+  const session = await getSession();
 
   if (!session) {
     const loginUrl = new URL('/login', request.url);

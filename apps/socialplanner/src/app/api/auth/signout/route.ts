@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 
-import { clearSession } from '@/lib/session';
+import { destroySession } from '@/lib/session';
 
 export async function POST() {
   try {
-    await clearSession();
+    await destroySession();
     return NextResponse.json({ success: true }, { status: 200 });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
