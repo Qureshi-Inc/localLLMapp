@@ -90,13 +90,17 @@ export default function RegisterPage() {
       });
 
       if (res.ok) {
-        setNotification({ message: 'Registration successful! Redirecting to login...', type: 'success' });
+        setNotification({ message: 'Registration successful! Redirecting...', type: 'success' });
         setTimeout(() => {
-          router.push('/login');
+          router.push('/');
         }, 2000);
       } else {
         const error = await res.json();
-        setNotification({ message: error.error || 'Registration failed', type: 'error' });
+        if (res.status === 409) {
+          setNotification({ message: 'Email already registered', type: 'error' });
+        } else {
+          setNotification({ message: error.error || 'Registration failed', type: 'error' });
+        }
       }
     } catch {
       setNotification({ message: 'Registration failed. Please try again.', type: 'error' });
