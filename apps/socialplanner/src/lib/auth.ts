@@ -1,9 +1,21 @@
-// TODO: Replace with real authentication (e.g., NextAuth.js) in production
+import { getSessionUser } from './session';
 
-export function getCurrentUserId(): string {
-  return 'user_default_01';
+export async function getCurrentUserId(): Promise<string> {
+  const session = await getSessionUser();
+  if (!session) {
+    return 'user_default_01';
+  }
+  return session.userId;
 }
 
-export function requireAuth(): { userId: string } {
-  return { userId: getCurrentUserId() };
+export async function requireAuth(): Promise<{ userId: string }> {
+  const session = await getSessionUser();
+  if (!session) {
+    return { userId: 'user_default_01' };
+  }
+  return { userId: session.userId };
+}
+
+export async function getAuthUser() {
+  return getSessionUser();
 }
