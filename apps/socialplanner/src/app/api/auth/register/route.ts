@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
 
 import { createUser, getUserByEmail } from '@/lib/db';
+import { hashPassword } from '@/lib/auth';
+import { createSession } from '@/lib/session';
 
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'A user with this email already exists' }, { status: 409 });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await hashPassword(password);
 
     const user = await createUser({
       name: name.trim(),
@@ -51,12 +52,12 @@ export async function POST(request: Request) {
       password: hashedPassword,
     });
 
-    return NextResponse.json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      createdAt: user.createdAt,
-    }, { status: 201 });
+    await createSession(user);
+
+    return NextResponse.json(
+      { user: { id: user.id, name: user.name, email: user.email } },
+      { status: 201 }
+    );
   } catch (error) {
     if (error instanceof Error && error.message === 'User with this email already exists') {
       return NextResponse.json({ error: 'A user with this email already exists' }, { status: 409 });
