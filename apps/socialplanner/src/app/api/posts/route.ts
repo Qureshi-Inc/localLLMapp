@@ -10,13 +10,26 @@ function isValidISODate(str: string): boolean {
   return !isNaN(date.getTime());
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const user = await auth();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const posts = await getPostsByUser(user.userId);
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    const platform = searchParams.get('platform');
+
+    let posts = await getPostsByUser(user.userId);
+
+    if (status) {
+      posts = posts.filter(post => post.status === status);
+    }
+
+    if (platform) {
+      posts = posts.filter(post => post.platform === platform);
+    }
+
     return NextResponse.json(posts, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
