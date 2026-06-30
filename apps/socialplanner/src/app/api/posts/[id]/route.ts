@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { getPostById, updatePost, deletePost, getAllPosts } from '@/lib/db';
-import { auth } from '@/lib/auth';
+import { getSession } from '@/lib/session';
 import { PostUpdateInput } from '@/lib/types';
 
 export async function GET(
@@ -9,13 +9,13 @@ export async function GET(
   { params }: { params: { id: string } },
 ) {
   try {
-    const user = await auth();
-    if (!user) {
+    const session = await getSession();
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { id } = params;
-    const post = await getPostById(id, user.userId);
+    const post = await getPostById(id, session.userId);
 
     if (!post) {
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
@@ -32,8 +32,8 @@ export async function PUT(
   { params }: { params: { id: string } },
 ) {
   try {
-    const user = await auth();
-    if (!user) {
+    const session = await getSession();
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -102,7 +102,7 @@ export async function PUT(
       updateData.imageUrl = imageUrl || null;
     }
 
-    const post = await updatePost(id, user.userId, updateData);
+    const post = await updatePost(id, session.userId, updateData);
 
     if (!post) {
       return NextResponse.json({ error: 'Post not found or unauthorized' }, { status: 404 });
@@ -119,8 +119,8 @@ export async function PATCH(
   { params }: { params: { id: string } },
 ) {
   try {
-    const user = await auth();
-    if (!user) {
+    const session = await getSession();
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -137,7 +137,7 @@ export async function PATCH(
       }
     }
 
-    const existingPost = await getPostById(id, user.userId);
+    const existingPost = await getPostById(id, session.userId);
 
     if (!existingPost) {
       const allPosts = await getAllPosts();
@@ -154,7 +154,7 @@ export async function PATCH(
       updateData.scheduledAt = body.scheduledAt || null;
     }
 
-    const post = await updatePost(id, user.userId, updateData);
+    const post = await updatePost(id, session.userId, updateData);
 
     if (!post) {
       return NextResponse.json({ error: 'Post not found or unauthorized' }, { status: 404 });
@@ -171,13 +171,13 @@ export async function DELETE(
   { params }: { params: { id: string } },
 ) {
   try {
-    const user = await auth();
-    if (!user) {
+    const session = await getSession();
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     const { id } = params;
-    const deleted = await deletePost(id, user.userId);
+    const deleted = await deletePost(id, session.userId);
 
     if (!deleted) {
       return NextResponse.json({ error: 'Post not found or unauthorized' }, { status: 404 });

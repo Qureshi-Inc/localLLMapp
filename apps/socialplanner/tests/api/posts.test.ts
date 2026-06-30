@@ -3,11 +3,9 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { GET, POST } from '@/app/api/posts/route';
 import { GET as GET_POST, PUT, DELETE } from '@/app/api/posts/[id]/route';
 import * as dbModule from '@/lib/db';
-import * as authModule from '@/lib/auth';
+import * as sessionModule from '@/lib/session';
 
-jest.mock('@/lib/auth', () => ({
-  auth: jest.fn(),
-}));
+jest.mock('@/lib/session', () => ({ getSession: jest.fn() }));
 
 jest.mock('@/lib/db', () => ({
   getPostsByUser: jest.fn(),
@@ -18,7 +16,7 @@ jest.mock('@/lib/db', () => ({
   getAllPosts: jest.fn(),
 }));
 
-const mockAuthFn = authModule.auth as jest.Mock;
+const mockAuthFn = sessionModule.getSession as jest.Mock;
 const mockGetPostsByUser = dbModule.getPostsByUser as jest.Mock;
 const mockGetPostById = dbModule.getPostById as jest.Mock;
 const mockCreatePost = dbModule.createPost as jest.Mock;
