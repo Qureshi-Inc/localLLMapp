@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 
 import { createPost, getPostsByUser } from '@/lib/db';
-import { auth } from '@/lib/auth';
-import { PLATFORMS, STATUSES, SessionUser } from '@/lib/types';
+import { getSession } from '@/lib/session';
+import { PLATFORMS, STATUSES } from '@/lib/types';
 
 function isValidISODate(str: string): boolean {
   const date = new Date(str);
@@ -11,15 +11,15 @@ function isValidISODate(str: string): boolean {
 
 export async function GET(request: Request) {
   try {
-    const user = await auth();
-    if (!user) {
+    const session = await getSession();
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const platform = searchParams.get('platform');
 
-    let posts = await getPostsByUser(user.userId);
+    let posts = await getPostsByUser(session.userId);
 
     if (status) {
       posts = posts.filter(post => post.status === status);
@@ -37,11 +37,10 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const user = await auth();
-    if (!user) {
+    const session = await getSession();
+    if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    (request as Request & { user: SessionUser }).user = user;
     const body = await request.json();
 
     const { title, caption, platform, status, scheduledAt, campaign, notes, imageUrl } = body;
@@ -81,7 +80,7 @@ export async function POST(request: Request) {
     }
 
     const post = await createPost({
-      userId: user.userId,
+      userId: session.userId,
       title: title.trim(),
       caption: caption.trim(),
       platform: platform as typeof PLATFORMS[number],
