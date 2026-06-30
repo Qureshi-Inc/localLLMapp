@@ -1,89 +1,130 @@
 import 'server-only';
 
 import { cookies } from 'next/headers';
-import { User } from './types';
-import { getUserByEmail } from './db';
+import { SessionUser, User } from './types';
 
-const SESSION_COOKIE_NAME = 'session_token';
-const SESSION_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const SESSION_COOKIE_NAME = 'session-token';
+const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
 
-export interface SessionData {
-  userId: string;
-  email: string;
-  name: string;
-  expiresAt: string;
+function getSecret(): string {
+  const secret = process.env.SESSION_SECRET;
+  if (!secret) {
+    throw new Error('SESSION_SECRET environment variable is not set');
+  }
+  return secret;
 }
 
-async function generateSessionToken(userId: string, email: string, name: string): Promise<string> {
-  const crypto = await import('crypto');
-  return crypto.randomUUID() + '-' + Date.now() + '-' + crypto.randomBytes(32).toString('hex');
+async function createSignature(payload: string, secret: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
+  const payloadData = encoder.encode(payload);
+
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+
+  const signature = await crypto.subtle.sign('HMAC', cryptoKey, payloadData);
+  const signatureArray = new Uint8Array(signature);
+  const signatureBytes = Array.from(signatureArray);
+  const chunks: string[] = [];
+  for (let i = 0; i < signatureBytes.length; i += 8192) {
+    chunks.push(String.fromCharCode.apply(null, signatureBytes.slice(i, i + 8192)));
+  }
+  return btoa(chunks.join(''));
+}
+
+async function verifySignature(payload: string, signature: string, secret: string): Promise<boolean> {
+  try {
+    const encoder = new TextEncoder();
+    const keyData = encoder.encode(secret);
+    const payloadData = encoder.encode(payload);
+
+    const cryptoKey = await crypto.subtle.importKey(
+      'raw',
+      keyData,
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify']
+    );
+
+    const signatureBytes = new Uint8Array(atob(signature).split('').map(c => c.charCodeAt(0)));
+    return await crypto.subtle.verify('HMAC', cryptoKey, signatureBytes, payloadData);
+  } catch {
+    return false;
+  }
 }
 
 export async function createSession(user: User): Promise<string> {
-  const token = await generateSessionToken(user.id, user.email, user.name);
-  const expiresAt = new Date(Date.now() + SESSION_EXPIRY_MS).toISOString();
-
-  const sessionData: SessionData = {
-    userId: user.id,
-    email: user.email,
-    name: user.name,
-    expiresAt,
-  };
+  const token = crypto.randomUUID();
+  const payload = JSON.stringify({ userId: user.id, token });
+  const secret = getSecret();
+  const signature = await createSignature(payload, secret);
+  const cookieValue = btoa(payload) + '.' + signature;
 
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE_NAME, token, {
+  cookieStore.set(SESSION_COOKIE_NAME, cookieValue, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    expires: new Date(Date.now() + SESSION_EXPIRY_MS),
-  });
-
-  cookieStore.set('session_data', JSON.stringify(sessionData), {
-    httpOnly: false,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    path: '/',
-    expires: new Date(Date.now() + SESSION_EXPIRY_MS),
+    maxAge: SESSION_MAX_AGE,
   });
 
   return token;
 }
 
-export async function validateSession(): Promise<SessionData | null> {
+export async function getSession(): Promise<SessionUser | null> {
   const cookieStore = await cookies();
-  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const cookieValue = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
-  if (!token) return null;
+  if (!cookieValue) {
+    return null;
+  }
 
-  const sessionStr = cookieStore.get('session_data')?.value;
-  if (!sessionStr) return null;
+  const parts = cookieValue.split('.');
+  if (parts.length !== 2) {
+    return null;
+  }
+
+  const [encodedPayload, signature] = parts;
+  const secret = getSecret();
+
+  let payload: string;
+  try {
+    payload = atob(encodedPayload);
+  } catch {
+    return null;
+  }
+
+  const valid = await verifySignature(payload, signature, secret);
+  if (!valid) {
+    return null;
+  }
 
   try {
-    const session: SessionData = JSON.parse(sessionStr);
-    if (new Date(session.expiresAt) < new Date()) {
-      await clearSession();
+    const sessionUser: SessionUser = JSON.parse(payload);
+    if (!sessionUser.userId) {
       return null;
     }
-
-    const user = await getUserByEmail(session.email);
-    if (!user) {
-      await clearSession();
-      return null;
-    }
-
-    return session;
+    return sessionUser;
   } catch {
     return null;
   }
 }
 
-export async function clearSession(): Promise<void> {
+export async function destroySession(): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.delete(SESSION_COOKIE_NAME);
-  cookieStore.delete('session_data');
+  cookieStore.set(SESSION_COOKIE_NAME, '', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 0,
+  });
 }
 
-export async function getSessionUser(): Promise<SessionData | null> {
-  return validateSession();
-}
+export const getSessionUser = getSession;

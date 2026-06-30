@@ -30,3 +30,7 @@ export const STATUSES = ['IDEA', 'DRAFT', 'SCHEDULED', 'PUBLISHED'] as const;
 export type PostCreateInput = Omit<Post, 'id' | 'createdAt' | 'updatedAt'>;
 
 export type PostUpdateInput = Partial<Omit<Post, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>;
+
+export interface SessionUser {
+  userId: string;
+}

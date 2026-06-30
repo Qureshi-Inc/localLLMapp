@@ -36,11 +36,14 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     try {
       const cookieSession = getSessionFromCookies();
       if (cookieSession) {
-        const expiresAt = new Date(cookieSession.expiresAt);
-        if (expiresAt > new Date()) {
-          setSession(cookieSession);
-          return;
-        }
+        const session: Session = {
+          userId: cookieSession.userId,
+          email: '',
+          name: '',
+          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        };
+        setSession(session);
+        return;
       }
     } catch {
       // ignore parse errors

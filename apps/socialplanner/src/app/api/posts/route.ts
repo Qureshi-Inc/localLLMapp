@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { createPost, getPostsByUser } from '@/lib/db';
 import { auth } from '@/lib/auth';
-import { PLATFORMS, STATUSES } from '@/lib/types';
-import { SessionData } from '@/lib/session';
+import { PLATFORMS, STATUSES, SessionUser } from '@/lib/types';
 
 function isValidISODate(str: string): boolean {
   const date = new Date(str);
@@ -42,7 +41,7 @@ export async function POST(request: Request) {
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    (request as Request & { user: SessionData }).user = user;
+    (request as Request & { user: SessionUser }).user = user;
     const body = await request.json();
 
     const { title, caption, platform, status, scheduledAt, campaign, notes, imageUrl } = body;
