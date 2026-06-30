@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { getPostById, updatePost, deletePost } from '@/lib/db';
+import { getPostById, updatePost, deletePost, getAllPosts } from '@/lib/db';
 import { auth } from '@/lib/auth';
 import { PostUpdateInput } from '@/lib/types';
 
@@ -100,6 +100,58 @@ export async function PUT(
         return NextResponse.json({ error: 'imageUrl must be a string or null' }, { status: 400 });
       }
       updateData.imageUrl = imageUrl || null;
+    }
+
+    const post = await updatePost(id, user.userId, updateData);
+
+    if (!post) {
+      return NextResponse.json({ error: 'Post not found or unauthorized' }, { status: 404 });
+    }
+
+    return NextResponse.json(post, { status: 200 });
+  } catch {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: { id: string } },
+) {
+  try {
+    const user = await auth();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = params;
+    const body = await request.json();
+
+    if (!body || Object.keys(body).length === 0) {
+      return NextResponse.json({ error: 'Request body is required' }, { status: 400 });
+    }
+
+    if ('scheduledAt' in body) {
+      if (body.scheduledAt !== null && (typeof body.scheduledAt !== 'string' || isNaN(new Date(body.scheduledAt).getTime()))) {
+        return NextResponse.json({ error: 'scheduledAt must be a valid ISO date string or null' }, { status: 400 });
+      }
+    }
+
+    const existingPost = await getPostById(id, user.userId);
+
+    if (!existingPost) {
+      const allPosts = await getAllPosts();
+      const anyPost = allPosts.find(p => p.id === id);
+      if (anyPost) {
+        return NextResponse.json({ error: 'Forbidden: you do not own this post' }, { status: 403 });
+      }
+      return NextResponse.json({ error: 'Post not found' }, { status: 404 });
+    }
+
+    const updateData: PostUpdateInput = {};
+
+    if (body.scheduledAt !== undefined) {
+      updateData.scheduledAt = body.scheduledAt || null;
     }
 
     const post = await updatePost(id, user.userId, updateData);

@@ -8,6 +8,10 @@ export const createUser = jest.fn((input: UserCreateInput) => {
   throw new Error('User with this email already exists');
 });
 
+export const getAllPosts = jest.fn(() => {
+  return Promise.resolve([]);
+});
+
 export const getPostsByUser = jest.fn((_userId: string) => {
   return Promise.resolve([]);
 });

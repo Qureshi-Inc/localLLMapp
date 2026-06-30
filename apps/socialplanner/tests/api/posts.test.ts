@@ -15,6 +15,7 @@ jest.mock('@/lib/db', () => ({
   createPost: jest.fn(),
   updatePost: jest.fn(),
   deletePost: jest.fn(),
+  getAllPosts: jest.fn(),
 }));
 
 const mockAuthFn = authModule.auth as jest.Mock;
