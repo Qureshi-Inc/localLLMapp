@@ -9,65 +9,53 @@ import {
   ReactNode,
 } from 'react';
 
-import { signOutClient } from '@/lib/session-client';
-import { getSessionFromCookies } from '@/lib/session-client';
-
-export interface Session {
-  userId: string;
-  email: string;
+export interface User {
+  id: string;
   name: string;
-  expiresAt: string;
+  email: string;
 }
 
-interface SessionContextType {
-  session: Session | null;
-  isLoading: boolean;
-  isAuthenticated: boolean;
-  signOut: () => Promise<void>;
+export interface SessionContextType {
+  user: User | null;
+  loading: boolean;
+  logout: () => Promise<void>;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 export function SessionProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const loadSession = useCallback(() => {
+  const fetchUser = useCallback(async () => {
     try {
-      const cookieSession = getSessionFromCookies();
-      if (cookieSession) {
-        const session: Session = {
-          userId: cookieSession.userId,
-          email: '',
-          name: '',
-          expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        };
-        setSession(session);
+      const res = await fetch('/api/auth/me');
+      if (!res.ok) {
+        setUser(null);
         return;
       }
+      const data = await res.json();
+      setUser(data.user);
     } catch {
-      // ignore parse errors
+      setUser(null);
     }
-    setSession(null);
   }, []);
 
   useEffect(() => {
-    loadSession();
-    setIsLoading(false);
-  }, [loadSession]);
+    fetchUser();
+    setLoading(false);
+  }, [fetchUser]);
 
-  const handleSignOut = useCallback(async () => {
+  const handleLogout = useCallback(async () => {
     try {
-      await signOutClient();
+      await fetch('/api/auth/signout', { method: 'POST' });
     } finally {
-      setSession(null);
+      setUser(null);
     }
   }, []);
 
-  const isAuthenticated = session !== null;
-
   return (
-    <SessionContext.Provider value={{ session, isLoading, isAuthenticated, signOut: handleSignOut }}>
+    <SessionContext.Provider value={{ user, loading, logout: handleLogout }}>
       {children}
     </SessionContext.Provider>
   );

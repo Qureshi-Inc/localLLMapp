@@ -100,6 +100,12 @@ export async function getUserByEmail(email: string): Promise<User | null> {
   return user || null;
 }
 
+export async function getUserById(id: string): Promise<User | null> {
+  const users = readUsers();
+  const user = users.find(u => u.id === id);
+  return user || null;
+}
+
 export async function createUser(input: UserCreateInput): Promise<User> {
   const users = readUsers();
   const existingUser = users.find(u => u.email === input.email);
