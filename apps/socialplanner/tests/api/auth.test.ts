@@ -10,6 +10,7 @@ jest.mock('bcryptjs', () => ({
 
 jest.mock('@/lib/session', () => ({
   createSession: jest.fn(),
+  destroySession: jest.fn(),
 }));
 
 jest.mock('@/lib/db', () => ({
@@ -19,6 +20,7 @@ jest.mock('@/lib/db', () => ({
 
 import { POST as registerPOST } from '@/app/api/auth/register/route';
 import { POST as signinPOST } from '@/app/api/auth/signin/route';
+import { POST as signoutPOST } from '@/app/api/auth/signout/route';
 import * as dbModule from '@/lib/db';
 
 const mockGetUserByEmail = dbModule.getUserByEmail as jest.Mock;
@@ -210,6 +212,46 @@ describe('POST /api/auth/signin', () => {
 
       const data = await response.json();
       expect(data.error).toBe('Invalid email or password');
+    });
+  });
+});
+
+describe('POST /api/auth/signout', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  describe('success', () => {
+    it('returns 200 and clears session', async () => {
+      const response = await signoutPOST();
+      expect(response.status).toBe(200);
+
+      const data = await response.json();
+      expect(data.message).toBe('Signed out successfully');
+    });
+
+    it('returns 200 even without active session', async () => {
+      const response = await signoutPOST();
+      expect(response.status).toBe(200);
+
+      const data = await response.json();
+      expect(data.message).toBe('Signed out successfully');
+    });
+  });
+
+  describe('failure', () => {
+    it('returns 500 if destroySession throws', async () => {
+      const module = await import('@/lib/session');
+      const originalDestroy = module.destroySession;
+      (module.destroySession as jest.Mock).mockRejectedValue(new Error('Failed to destroy session'));
+
+      const response = await signoutPOST();
+      expect(response.status).toBe(500);
+
+      const data = await response.json();
+      expect(data.error).toBe('Internal server error');
+
+      module.destroySession = originalDestroy;
     });
   });
 });
