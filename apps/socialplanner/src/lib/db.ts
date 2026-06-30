@@ -47,6 +47,10 @@ function writeUsers(users: User[]): void {
   fs.writeFileSync(USERS_DB_PATH, JSON.stringify(users, null, 2));
 }
 
+export async function getAllPosts(): Promise<Post[]> {
+  return readPosts();
+}
+
 export async function getPostsByUser(userId: string): Promise<Post[]> {
   const posts = readPosts();
   return posts.filter(post => post.userId === userId);
