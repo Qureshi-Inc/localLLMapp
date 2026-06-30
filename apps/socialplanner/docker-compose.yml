@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://socialplanner:password@postgres:5432/socialplanner
+      - SESSION_SECRET=change-me-in-production
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=socialplanner
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=socialplanner
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U socialplanner"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    image: node:20-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    working_dir: /app
+    environment:
+      - DATABASE_URL=postgresql://socialplanner:password@postgres:5432/socialplanner
+    volumes:
+      - .:/app
+    entrypoint: ["sh", "-c", "npx prisma generate && npx prisma migrate deploy"]
+
+volumes:
+  postgres_data:
