@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
 
 import { getUserByEmail } from '@/lib/db';
 import { createSession } from '@/lib/session';
+import { verifyPassword } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
@@ -18,18 +18,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    const isValidPassword = await verifyPassword(password, user.password);
     if (!isValidPassword) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
     await createSession(user);
 
-    return NextResponse.json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-    }, { status: 200 });
+    return NextResponse.json({ user: { id: user.id, name: user.name, email: user.email } });
   } catch {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
