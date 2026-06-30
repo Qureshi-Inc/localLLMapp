@@ -37,6 +37,7 @@ interface FieldErrors {
   caption?: string;
   platform?: string;
   status?: string;
+  scheduledAt?: string;
 }
 
 const PLATFORM_OPTIONS = ['Instagram', 'Facebook', 'LinkedIn', 'X', 'TikTok'];
@@ -93,6 +94,8 @@ export default function PostForm({ onSubmit, initialData, isLoading, onCancel }:
     const newErrors: FieldErrors = {};
     if (!title.trim()) {
       newErrors.title = 'Title is required';
+    } else if (title.length > 200) {
+      newErrors.title = 'Title must be 200 characters or less';
     }
     if (!caption.trim()) {
       newErrors.caption = 'Caption is required';
@@ -102,6 +105,13 @@ export default function PostForm({ onSubmit, initialData, isLoading, onCancel }:
     }
     if (!status) {
       newErrors.status = 'Status is required';
+    }
+    if (status === 'SCHEDULED' && scheduledAt) {
+      const scheduledDate = new Date(scheduledAt);
+      const now = new Date();
+      if (scheduledDate <= now) {
+        newErrors.scheduledAt = 'Scheduled date must be in the future';
+      }
     }
     return newErrors;
   };
@@ -113,7 +123,7 @@ export default function PostForm({ onSubmit, initialData, isLoading, onCancel }:
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setTouched({ title: true, caption: true, platform: true, status: true });
+    setTouched({ title: true, caption: true, platform: true, status: true, scheduledAt: true });
     const validationErrors = validate();
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
@@ -143,6 +153,7 @@ export default function PostForm({ onSubmit, initialData, isLoading, onCancel }:
   const captionError = touched.caption ? errors.caption : undefined;
   const platformError = touched.platform ? errors.platform : undefined;
   const statusError = touched.status ? errors.status : undefined;
+  const scheduledAtError = touched.scheduledAt ? errors.scheduledAt : undefined;
 
   return (
     <div className="space-y-4 animate-in animate-fade-in">
@@ -355,10 +366,26 @@ export default function PostForm({ onSubmit, initialData, isLoading, onCancel }:
                 id="post-scheduledAt"
                 type="datetime-local"
                 value={scheduledAt}
-                onChange={(e) => setScheduledAt(e.target.value)}
-                className="w-full bg-surface-50 border border-input rounded-lg px-4 py-2.5 text-sm text-surface-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors disabled:opacity-50"
+                onChange={(e) => {
+                  setScheduledAt(e.target.value);
+                  if (touched.scheduledAt) setErrors(validate());
+                }}
+                onBlur={() => handleBlur('scheduledAt')}
+                className={`w-full bg-surface-50 border border-input rounded-lg px-4 py-2.5 text-sm text-surface-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors disabled:opacity-50 ${
+                  scheduledAtError ? 'bg-danger-50 border-danger-300' : ''
+                }`}
                 disabled={isSubmitting || isLoading}
+                aria-invalid={!!scheduledAtError}
+                aria-describedby={scheduledAtError ? 'scheduledAt-error' : undefined}
               />
+              {scheduledAtError && (
+                <p id="scheduledAt-error" className="text-xs text-danger-600 flex items-center gap-1">
+                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {scheduledAtError}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
