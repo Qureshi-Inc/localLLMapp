@@ -1,19 +1,23 @@
 import { getSessionUser } from './session';
 
-export async function getCurrentUserId(): Promise<string> {
+export async function getCurrentUserId(): Promise<string | null> {
   const session = await getSessionUser();
   if (!session) {
-    return 'user_default_01';
+    return null;
   }
   return session.userId;
 }
 
-export async function requireAuth(): Promise<{ userId: string }> {
+export async function requireAuth(): Promise<{ userId: string } | null> {
   const session = await getSessionUser();
   if (!session) {
-    return { userId: 'user_default_01' };
+    return null;
   }
   return { userId: session.userId };
+}
+
+export async function auth() {
+  return getSessionUser();
 }
 
 export async function getAuthUser() {

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 
 import { createPost, getPostsByUser } from '@/lib/db';
-import { requireAuth } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 import { PLATFORMS, STATUSES } from '@/lib/types';
+import { SessionData } from '@/lib/session';
 
 function isValidISODate(str: string): boolean {
   const date = new Date(str);
@@ -11,8 +12,11 @@ function isValidISODate(str: string): boolean {
 
 export async function GET() {
   try {
-    const { userId } = await requireAuth();
-    const posts = await getPostsByUser(userId);
+    const user = await auth();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const posts = await getPostsByUser(user.userId);
     return NextResponse.json(posts, { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -21,7 +25,11 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { userId } = await requireAuth();
+    const user = await auth();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    (request as Request & { user: SessionData }).user = user;
     const body = await request.json();
 
     const { title, caption, platform, status, scheduledAt, campaign, notes, imageUrl } = body;
@@ -61,7 +69,7 @@ export async function POST(request: Request) {
     }
 
     const post = await createPost({
-      userId,
+      userId: user.userId,
       title: title.trim(),
       caption: caption.trim(),
       platform: platform as typeof PLATFORMS[number],
