@@ -2,16 +2,17 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 
-import { Post, PostCreateInput, PostUpdateInput } from './types';
+import { Post, PostCreateInput, PostUpdateInput, User, UserCreateInput } from './types';
 
-const DB_PATH = path.join(process.cwd(), 'data', 'posts.json');
+const POSTS_DB_PATH = path.join(process.cwd(), 'data', 'posts.json');
+const USERS_DB_PATH = path.join(process.cwd(), 'data', 'users.json');
 
 function readPosts(): Post[] {
-  if (!fs.existsSync(DB_PATH)) {
+  if (!fs.existsSync(POSTS_DB_PATH)) {
     return [];
   }
   try {
-    const data = fs.readFileSync(DB_PATH, 'utf-8');
+    const data = fs.readFileSync(POSTS_DB_PATH, 'utf-8');
     return JSON.parse(data);
   } catch {
     return [];
@@ -19,11 +20,31 @@ function readPosts(): Post[] {
 }
 
 function writePosts(posts: Post[]): void {
-  const dir = path.dirname(DB_PATH);
+  const dir = path.dirname(POSTS_DB_PATH);
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
-  fs.writeFileSync(DB_PATH, JSON.stringify(posts, null, 2));
+  fs.writeFileSync(POSTS_DB_PATH, JSON.stringify(posts, null, 2));
+}
+
+function readUsers(): User[] {
+  if (!fs.existsSync(USERS_DB_PATH)) {
+    return [];
+  }
+  try {
+    const data = fs.readFileSync(USERS_DB_PATH, 'utf-8');
+    return JSON.parse(data);
+  } catch {
+    return [];
+  }
+}
+
+function writeUsers(users: User[]): void {
+  const dir = path.dirname(USERS_DB_PATH);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  fs.writeFileSync(USERS_DB_PATH, JSON.stringify(users, null, 2));
 }
 
 export async function getPostsByUser(userId: string): Promise<Post[]> {
@@ -67,4 +88,28 @@ export async function deletePost(id: string, userId: string): Promise<boolean> {
   posts.splice(index, 1);
   writePosts(posts);
   return true;
+}
+
+export async function getUserByEmail(email: string): Promise<User | null> {
+  const users = readUsers();
+  const user = users.find(u => u.email === email);
+  return user || null;
+}
+
+export async function createUser(input: UserCreateInput): Promise<User> {
+  const users = readUsers();
+  const existingUser = users.find(u => u.email === input.email);
+  if (existingUser) {
+    throw new Error('User with this email already exists');
+  }
+  const now = new Date().toISOString();
+  const newUser: User = {
+    ...input,
+    id: crypto.randomUUID(),
+    createdAt: now,
+    updatedAt: now,
+  };
+  users.push(newUser);
+  writeUsers(users);
+  return newUser;
 }
