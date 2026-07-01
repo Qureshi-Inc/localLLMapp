@@ -25,8 +25,10 @@ async function main() {
 
   console.log(`Created/Found user: ${user.email} (ID: ${user.id})`);
 
-  const platforms = ['TWITTER', 'LINKEDIN', 'INSTAGRAM', 'FACEBOOK'] as const;
-  const statuses = ['DRAFT', 'SCHEDULED', 'PUBLISHED'] as const;
+  const userId = user.id;
+
+  const platforms = ['X', 'LINKEDIN', 'INSTAGRAM', 'FACEBOOK', 'TIKTOK'] as const;
+  const statuses = ['IDEA', 'DRAFT', 'SCHEDULED', 'PUBLISHED'] as const;
 
   const now = new Date();
   const currentMonth = now.getMonth();
@@ -39,97 +41,113 @@ async function main() {
   const followingMonthDate2 = new Date(currentYear, currentMonth + 1, 25);
 
   const posts: {
-    content: string;
+    title: string;
+    caption: string;
     platform: typeof platforms[number];
     status: typeof statuses[number];
     scheduledAt: Date | null;
   }[] = [
     {
-      content: 'Just started using a new content planning tool! Excited to see how it improves my workflow.',
-      platform: 'TWITTER',
+      title: 'New Content Planning Tool',
+      caption: 'Just started using a new content planning tool! Excited to see how it improves my workflow.',
+      platform: 'X',
       status: 'PUBLISHED',
       scheduledAt: previousMonthDate,
     },
     {
-      content: 'Here are my top 5 tips for social media engagement in 2024.',
+      title: 'Top 5 Engagement Tips',
+      caption: 'Here are my top 5 tips for social media engagement in 2024.',
       platform: 'LINKEDIN',
       status: 'PUBLISHED',
       scheduledAt: previousMonthDate,
     },
     {
-      content: 'Behind the scenes of our latest photoshoot. Stay tuned for the final results!',
+      title: 'Photoshoot Behind the Scenes',
+      caption: 'Behind the scenes of our latest photoshoot. Stay tuned for the final results!',
       platform: 'INSTAGRAM',
       status: 'PUBLISHED',
       scheduledAt: previousMonthDate,
     },
     {
-      content: 'We are hiring! Join our growing team of creative professionals.',
+      title: 'We Are Hiring',
+      caption: 'We are hiring! Join our growing team of creative professionals.',
       platform: 'FACEBOOK',
       status: 'PUBLISHED',
       scheduledAt: previousMonthDate,
     },
     {
-      content: 'Quick thread on the importance of consistency in social media marketing.',
-      platform: 'TWITTER',
+      title: 'Consistency in Marketing',
+      caption: 'Quick thread on the importance of consistency in social media marketing.',
+      platform: 'X',
       status: 'SCHEDULED',
       scheduledAt: currentMonthDate1,
     },
     {
-      content: 'Exploring the latest trends in professional networking and how they shape our industry.',
+      title: 'Networking Trends',
+      caption: 'Exploring the latest trends in professional networking and how they shape our industry.',
       platform: 'LINKEDIN',
       status: 'SCHEDULED',
       scheduledAt: currentMonthDate1,
     },
     {
-      content: 'New product launch coming soon! Here is a sneak peek at what we have been working on.',
+      title: 'Product Launch Sneak Peek',
+      caption: 'New product launch coming soon! Here is a sneak peek at what we have been working on.',
       platform: 'INSTAGRAM',
       status: 'SCHEDULED',
       scheduledAt: currentMonthDate2,
     },
     {
-      content: 'Join us for a live Q&A session this Friday at 3 PM EST. Bring your questions!',
+      title: 'Live Q&A Session',
+      caption: 'Join us for a live Q&A session this Friday at 3 PM EST. Bring your questions!',
       platform: 'FACEBOOK',
       status: 'SCHEDULED',
       scheduledAt: currentMonthDate2,
     },
     {
-      content: 'The future of social media is here. Check out our latest blog post on emerging platforms.',
-      platform: 'TWITTER',
+      title: 'Future of Social Media',
+      caption: 'The future of social media is here. Check out our latest blog post on emerging platforms.',
+      platform: 'X',
       status: 'SCHEDULED',
       scheduledAt: followingMonthDate,
     },
     {
-      content: 'Thoughts on AI-powered content creation and what it means for marketers.',
+      title: 'AI Content Creation',
+      caption: 'Thoughts on AI-powered content creation and what it means for marketers.',
       platform: 'LINKEDIN',
       status: 'SCHEDULED',
       scheduledAt: followingMonthDate,
     },
     {
-      content: 'Weekend vibes! Here is how we balance work and life in the social media world.',
+      title: 'Work-Life Balance',
+      caption: 'Weekend vibes! Here is how we balance work and life in the social media world.',
       platform: 'INSTAGRAM',
       status: 'SCHEDULED',
       scheduledAt: followingMonthDate2,
     },
     {
-      content: 'Customer spotlight: See how our clients are crushing their social media goals.',
+      title: 'Client Success Story',
+      caption: 'Customer spotlight: See how our clients are crushing their social media goals.',
       platform: 'FACEBOOK',
       status: 'SCHEDULED',
       scheduledAt: followingMonthDate2,
     },
     {
-      content: 'Draft: Analysis of Q1 social media performance metrics and key takeaways.',
-      platform: 'TWITTER',
+      title: 'Q1 Performance Analysis',
+      caption: 'Draft: Analysis of Q1 social media performance metrics and key takeaways.',
+      platform: 'X',
       status: 'DRAFT',
       scheduledAt: null,
     },
     {
-      content: 'Draft: Creating a comprehensive social media strategy for small businesses.',
+      title: 'Social Media Strategy',
+      caption: 'Draft: Creating a comprehensive social media strategy for small businesses.',
       platform: 'LINKEDIN',
       status: 'DRAFT',
       scheduledAt: null,
     },
     {
-      content: 'Draft: Visual content ideas for the upcoming holiday season.',
+      title: 'Holiday Content Ideas',
+      caption: 'Draft: Visual content ideas for the upcoming holiday season.',
       platform: 'INSTAGRAM',
       status: 'DRAFT',
       scheduledAt: null,
@@ -139,8 +157,9 @@ async function main() {
   for (const post of posts) {
     await prisma.post.create({
       data: {
-        userId: user.id,
-        content: post.content,
+        userId,
+        title: post.title,
+        caption: post.caption,
         platform: post.platform,
         status: post.status,
         scheduledAt: post.scheduledAt,

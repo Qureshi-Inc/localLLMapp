@@ -1,125 +1,162 @@
-import fs from 'fs';
-import path from 'path';
-import crypto from 'crypto';
+import { PrismaClient } from '@prisma/client';
 
 import { Post, PostCreateInput, PostUpdateInput, User, UserCreateInput } from './types';
 
-const POSTS_DB_PATH = path.join(process.cwd(), 'data', 'posts.json');
-const USERS_DB_PATH = path.join(process.cwd(), 'data', 'users.json');
+const prismaClient = new PrismaClient();
 
-function readPosts(): Post[] {
-  if (!fs.existsSync(POSTS_DB_PATH)) {
-    return [];
-  }
-  try {
-    const data = fs.readFileSync(POSTS_DB_PATH, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
+function prismaPostToAppPost(post: any): Post {
+  const platformMap: Record<string, string> = {
+    INSTAGRAM: 'Instagram',
+    FACEBOOK: 'Facebook',
+    LINKEDIN: 'LinkedIn',
+    X: 'X',
+    TIKTOK: 'TikTok',
+  };
+
+  const statusMap: Record<string, string> = {
+    IDEA: 'IDEA',
+    DRAFT: 'DRAFT',
+    SCHEDULED: 'SCHEDULED',
+    PUBLISHED: 'PUBLISHED',
+  };
+
+  return {
+    id: String(post.id),
+    userId: post.userId,
+    title: post.title,
+    caption: post.caption,
+    platform: platformMap[post.platform] || post.platform,
+    status: statusMap[post.status] || post.status,
+    scheduledAt: post.scheduledAt?.toISOString() || null,
+    campaign: post.campaign || null,
+    notes: post.notes || null,
+    imageUrl: post.imageUrl || null,
+    createdAt: post.createdAt.toISOString(),
+    updatedAt: post.updatedAt.toISOString(),
+  };
 }
 
-function writePosts(posts: Post[]): void {
-  const dir = path.dirname(POSTS_DB_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  fs.writeFileSync(POSTS_DB_PATH, JSON.stringify(posts, null, 2));
+function appPlatformToPrisma(platform: string): string {
+  const reverseMap: Record<string, string> = {
+    Instagram: 'INSTAGRAM',
+    Facebook: 'FACEBOOK',
+    LinkedIn: 'LINKEDIN',
+    X: 'X',
+    TikTok: 'TIKTOK',
+  };
+  return reverseMap[platform] || platform;
 }
 
-function readUsers(): User[] {
-  if (!fs.existsSync(USERS_DB_PATH)) {
-    return [];
-  }
-  try {
-    const data = fs.readFileSync(USERS_DB_PATH, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
+function appStatusToPrisma(status: string): string {
+  return status.toUpperCase();
 }
 
-function writeUsers(users: User[]): void {
-  const dir = path.dirname(USERS_DB_PATH);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  fs.writeFileSync(USERS_DB_PATH, JSON.stringify(users, null, 2));
+function prismaUserToAppUser(user: any): User {
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    password: '',
+    createdAt: user.createdAt.toISOString(),
+    updatedAt: user.updatedAt.toISOString(),
+  };
 }
 
 export async function getAllPosts(): Promise<Post[]> {
-  return readPosts();
+  const posts = await prismaClient.post.findMany({
+    orderBy: { createdAt: 'desc' },
+  });
+  return posts.map(prismaPostToAppPost);
 }
 
 export async function getPostsByUser(userId: string): Promise<Post[]> {
-  const posts = readPosts();
-  return posts.filter(post => post.userId === userId);
+  const posts = await prismaClient.post.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+  });
+  return posts.map(prismaPostToAppPost);
 }
 
 export async function getPostById(id: string, userId: string): Promise<Post | null> {
-  const posts = readPosts();
-  const post = posts.find(p => p.id === id && p.userId === userId);
-  return post || null;
+  const post = await prismaClient.post.findFirst({
+    where: { id: Number(id), userId },
+  });
+  return post ? prismaPostToAppPost(post) : null;
 }
 
 export async function createPost(input: PostCreateInput): Promise<Post> {
-  const posts = readPosts();
-  const now = new Date().toISOString();
-  const newPost: Post = {
-    ...input,
-    id: crypto.randomUUID(),
-    createdAt: now,
-    updatedAt: now,
-  };
-  posts.push(newPost);
-  writePosts(posts);
-  return newPost;
+  const post = await prismaClient.post.create({
+    data: {
+      userId: input.userId,
+      title: input.title,
+      caption: input.caption,
+      platform: appPlatformToPrisma(input.platform) as any,
+      status: appStatusToPrisma(input.status) as any,
+      scheduledAt: input.scheduledAt ? new Date(input.scheduledAt) : null,
+      campaign: input.campaign || null,
+      notes: input.notes || null,
+      imageUrl: input.imageUrl || null,
+    },
+  });
+  return prismaPostToAppPost(post);
 }
 
 export async function updatePost(id: string, userId: string, updates: PostUpdateInput): Promise<Post | null> {
-  const posts = readPosts();
-  const index = posts.findIndex(p => p.id === id && p.userId === userId);
-  if (index === -1) return null;
-  posts[index] = { ...posts[index], ...updates, updatedAt: new Date().toISOString() };
-  writePosts(posts);
-  return posts[index];
+  const updateData: any = {};
+
+  if (updates.title !== undefined) updateData.title = updates.title;
+  if (updates.caption !== undefined) updateData.caption = updates.caption;
+  if (updates.platform !== undefined) updateData.platform = appPlatformToPrisma(updates.platform) as any;
+  if (updates.status !== undefined) updateData.status = appStatusToPrisma(updates.status) as any;
+  if (updates.scheduledAt !== undefined) updateData.scheduledAt = updates.scheduledAt ? new Date(updates.scheduledAt) : null;
+  if (updates.campaign !== undefined) updateData.campaign = updates.campaign || null;
+  if (updates.notes !== undefined) updateData.notes = updates.notes || null;
+  if (updates.imageUrl !== undefined) updateData.imageUrl = updates.imageUrl || null;
+
+  const post = await prismaClient.post.findFirst({
+    where: { id: Number(id), userId },
+  });
+
+  if (!post) return null;
+
+  const updated = await prismaClient.post.update({
+    where: { id: Number(id) },
+    data: updateData,
+  });
+
+  return prismaPostToAppPost(updated);
 }
 
 export async function deletePost(id: string, userId: string): Promise<boolean> {
-  const posts = readPosts();
-  const index = posts.findIndex(p => p.id === id && p.userId === userId);
-  if (index === -1) return false;
-  posts.splice(index, 1);
-  writePosts(posts);
-  return true;
+  const result = await prismaClient.post.deleteMany({
+    where: { id: Number(id), userId },
+  });
+  return result.count > 0;
 }
 
 export async function getUserByEmail(email: string): Promise<User | null> {
-  const users = readUsers();
-  const user = users.find(u => u.email === email);
-  return user || null;
+  const user = await prismaClient.user.findUnique({
+    where: { email },
+  });
+  return user ? prismaUserToAppUser(user) : null;
 }
 
 export async function getUserById(id: string): Promise<User | null> {
-  const users = readUsers();
-  const user = users.find(u => u.id === id);
-  return user || null;
+  const user = await prismaClient.user.findUnique({
+    where: { id },
+  });
+  return user ? prismaUserToAppUser(user) : null;
 }
 
 export async function createUser(input: UserCreateInput): Promise<User> {
-  const users = readUsers();
-  const existingUser = users.find(u => u.email === input.email);
-  if (existingUser) {
-    throw new Error('User with this email already exists');
-  }
-  const now = new Date().toISOString();
-  const newUser: User = {
-    ...input,
-    id: crypto.randomUUID(),
-    createdAt: now,
-    updatedAt: now,
-  };
-  users.push(newUser);
-  writeUsers(users);
-  return newUser;
+  const user = await prismaClient.user.create({
+    data: {
+      name: input.name,
+      email: input.email,
+      passwordHash: input.password,
+    },
+  });
+  return prismaUserToAppUser(user);
 }
+
+export { prismaClient };
