@@ -1,6 +1,7 @@
 'use client';
 
 import { SessionProvider, useSession } from '@/contexts/SessionContext';
+import { CartProvider } from '@/contexts/CartContext';
 import Navbar from '@/components/Navbar';
 
 function AppContent({ children }: { children: React.ReactNode }) {
@@ -21,7 +22,9 @@ function AppContent({ children }: { children: React.ReactNode }) {
 export default function ClientRoot({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
-      <AppContent>{children}</AppContent>
+      <CartProvider>
+        <AppContent>{children}</AppContent>
+      </CartProvider>
     </SessionProvider>
   );
 }

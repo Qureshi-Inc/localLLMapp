@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import ProductCard from '@/components/ProductCard';
+import { useCart } from '@/contexts/CartContext';
 
 interface Product {
   id: string;
@@ -36,11 +36,7 @@ const PRODUCTS: Product[] = [
 ];
 
 export default function ArsPage() {
-  const [cartCount, setCartCount] = useState(0);
-
-  const handleAddToCart = () => {
-    setCartCount((prev) => prev + 1);
-  };
+  const { cartCount, addToCart } = useCart();
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
@@ -54,7 +50,7 @@ export default function ArsPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {PRODUCTS.map((product) => (
-            <ProductCard key={product.id} product={product} onAddToCart={handleAddToCart} />
+            <ProductCard key={product.id} product={product} onAddToCart={addToCart} />
           ))}
         </div>
 
