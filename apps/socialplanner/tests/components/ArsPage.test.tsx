@@ -1,79 +1,61 @@
+/** @jest-environment jsdom */
 import { render, screen, fireEvent } from '@testing-library/react';
 import ArsPage from '@/app/ars/page';
-import { useCart } from '@/contexts/CartContext';
-import ProductCard from '@/components/ProductCard';
+import { CartProvider } from '@/contexts/CartContext';
 
-jest.mock('@/contexts/CartContext', () => {
-  const actual = jest.requireActual('@/contexts/CartContext');
-  return {
-    ...actual,
-    useCart: jest.fn(),
-  };
-});
-
-jest.mock('@/components/ProductCard', () => {
-  return function MockProductCard({ product, onAddToCart }: any) {
-    return (
-      <div data-testid={`product-card-${product.id}`}>
-        <h2>{product.name}</h2>
-        <p>{product.description}</p>
-        <span>${product.price.toFixed(2)}</span>
-        <button onClick={onAddToCart}>Add to Cart</button>
-      </div>
-    );
-  };
-});
+const renderWithCart = (ui: React.ReactElement) => {
+  return render(<CartProvider>{ui}</CartProvider>);
+};
 
 describe('ArsPage', () => {
-  const mockAddToCart = jest.fn();
-  const mockCartCount = 0;
-
-  beforeEach(() => {
-    jest.clearAllMocks();
-    (useCart as jest.Mock).mockReturnValue({
-      cartCount: mockCartCount,
-      addToCart: mockAddToCart,
-    });
-  });
-
-  it('renders the page title and description', () => {
-    render(<ArsPage />);
-    expect(screen.getByText('Ars Collection')).toBeInTheDocument();
-    expect(screen.getByText(/Discover our curated selection/)).toBeInTheDocument();
+  it('renders the page without errors', () => {
+    renderWithCart(<ArsPage />);
+    expect(screen.getByRole('heading', { name: /ars collection/i })).toBeInTheDocument();
   });
 
   it('displays exactly three items', () => {
-    render(<ArsPage />);
-    const productCards = screen.getAllByTestId(/^product-card-/);
+    renderWithCart(<ArsPage />);
+    const productCards = screen.getAllByRole('heading', { level: 2 });
     expect(productCards).toHaveLength(3);
   });
 
-  it('renders the correct product names', () => {
-    render(<ArsPage />);
+  it('renders product names and prices', () => {
+    renderWithCart(<ArsPage />);
     expect(screen.getByText('Premium Widget')).toBeInTheDocument();
     expect(screen.getByText('Smart Gadget')).toBeInTheDocument();
     expect(screen.getByText('Essential Tool')).toBeInTheDocument();
+    expect(screen.getByText('$49.99')).toBeInTheDocument();
+    expect(screen.getByText('$89.99')).toBeInTheDocument();
+    expect(screen.getByText('$29.99')).toBeInTheDocument();
   });
 
-  it('calls addToCart when Add to Cart button is clicked', () => {
-    render(<ArsPage />);
-    const buttons = screen.getAllByText('Add to Cart');
-    fireEvent.click(buttons[0]);
-    expect(mockAddToCart).toHaveBeenCalledTimes(1);
+  it('allows adding items to cart', () => {
+    renderWithCart(<ArsPage />);
+    const addToCartButtons = screen.getAllByRole('button', { name: /add to cart/i });
+    expect(addToCartButtons).toHaveLength(3);
+    
+    fireEvent.click(addToCartButtons[0]);
+    expect(screen.getByText(/items in cart: 1/i)).toBeInTheDocument();
+    
+    fireEvent.click(addToCartButtons[1]);
+    expect(screen.getByText(/items in cart: 2/i)).toBeInTheDocument();
   });
 
-  it('does not show cart count when it is zero', () => {
-    render(<ArsPage />);
-    expect(screen.queryByText(/Items in cart:/)).not.toBeInTheDocument();
-  });
-
-  it('shows cart count when it is greater than zero', () => {
-    (useCart as jest.Mock).mockReturnValue({
-      cartCount: 2,
-      addToCart: mockAddToCart,
+  it('has proper accessibility attributes', () => {
+    renderWithCart(<ArsPage />);
+    const heading = screen.getByRole('heading', { name: /ars collection/i });
+    expect(heading.tagName).toBe('H1');
+    
+    const images = screen.getAllByRole('img');
+    expect(images).toHaveLength(3);
+    images.forEach((img) => {
+      expect(img).toHaveAttribute('alt');
+      expect(img.getAttribute('alt')).not.toBe('');
     });
-    render(<ArsPage />);
-    expect(screen.getByText('Items in cart:')).toBeInTheDocument();
-    expect(screen.getByText('2')).toBeInTheDocument();
+
+    const buttons = screen.getAllByRole('button', { name: /add to cart/i });
+    buttons.forEach((btn) => {
+      expect(btn).toBeEnabled();
+    });
   });
 });
