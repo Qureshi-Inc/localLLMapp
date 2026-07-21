@@ -19,6 +19,7 @@ const navItems: NavItem[] = [
   { label: 'Tasks', href: '/tasks' },
   { label: 'TaskPulse', href: '/taskpulse' },
   { label: 'Blog', href: '/blog' },
+  { label: 'About', href: '/about' },
 ];
 
 export default function Navbar() {
