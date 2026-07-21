@@ -18,6 +18,7 @@ const navItems: NavItem[] = [
   { label: 'Ars', href: '/ars' },
   { label: 'Tasks', href: '/tasks' },
   { label: 'TaskPulse', href: '/taskpulse' },
+  { label: 'Blog', href: '/blog' },
 ];
 
 export default function Navbar() {
