@@ -16,6 +16,10 @@ const navItems: NavItem[] = [
   { label: 'All Posts', href: '/posts' },
   { label: 'Create Post', href: '/posts/new' },
   { label: 'Ars', href: '/ars' },
+  { label: 'Tasks', href: '/tasks' },
+  { label: 'TaskPulse', href: '/taskpulse' },
+  { label: 'Blog', href: '/blog' },
+  { label: 'About', href: '/about' },
 ];
 
 export default function Navbar() {
