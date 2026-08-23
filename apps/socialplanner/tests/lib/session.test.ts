@@ -10,7 +10,7 @@ jest.mock('next/headers', () => ({
   cookies: jest.fn(() => mockCookiesStore),
 }));
 
-process.env.SESSION_SECRET = 'test-secret-key-for-signing';
+process.env.SESSION_SECRET = 'zJ8pQ2vT5wX9bN3mK7rL4sD6fG1hY0aC8eU2iO5pWq';
 
 describe('session module', () => {
   beforeEach(() => {
