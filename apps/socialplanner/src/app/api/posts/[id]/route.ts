@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { getPostById, updatePost, deletePost, getAllPosts } from '@/lib/db';
+import { getPostById, updatePost, deletePost } from '@/lib/db';
 import { getSession } from '@/lib/session';
 import { PostUpdateInput } from '@/lib/types';
 
@@ -140,11 +140,9 @@ export async function PATCH(
     const existingPost = await getPostById(id, session.userId);
 
     if (!existingPost) {
-      const allPosts = await getAllPosts();
-      const anyPost = allPosts.find(p => p.id === id);
-      if (anyPost) {
-        return NextResponse.json({ error: 'Forbidden: you do not own this post' }, { status: 403 });
-      }
+      // Return 404 whether the post is missing or simply not owned by this user.
+      // Distinguishing the two (or querying every user's posts) leaks cross-tenant
+      // post existence and is an unbounded query (CWE-204 / DoS).
       return NextResponse.json({ error: 'Post not found' }, { status: 404 });
     }
 
