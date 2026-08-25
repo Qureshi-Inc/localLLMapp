@@ -9,9 +9,9 @@ jest.mock('next/navigation', () => ({
 const { usePathname } = require('next/navigation');
 
 const mockTasks = [
-  { id: '1', title: 'Task One', description: 'First task', status: 'Todo', createdAt: '2024-01-10T00:00:00Z' },
-  { id: '2', title: 'Task Two', description: 'Second task', status: 'In Progress', createdAt: '2024-01-09T00:00:00Z' },
-  { id: '3', title: 'Task Three', description: 'Third task', status: 'Done', createdAt: '2024-01-08T00:00:00Z' },
+  { id: '1', title: 'Task One', description: 'First task', status: 'Todo' as const, priority: 'Medium' as const, createdAt: '2024-01-10T00:00:00Z' },
+  { id: '2', title: 'Task Two', description: 'Second task', status: 'In Progress' as const, priority: 'High' as const, createdAt: '2024-01-09T00:00:00Z' },
+  { id: '3', title: 'Task Three', description: 'Third task', status: 'Done' as const, priority: 'Low' as const, createdAt: '2024-01-08T00:00:00Z' },
 ];
 
 describe('Dashboard Component', () => {

@@ -2,12 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import type { Priority } from '@/lib/db';
+import { PRIORITY_CONFIG } from '@/lib/db';
+export type { Priority, PRIORITY_CONFIG };
 
 interface Task {
   id: string;
   title: string;
   description: string;
   status: 'Todo' | 'In Progress' | 'Done';
+  priority: Priority;
   createdAt: string;
 }
 
@@ -421,9 +425,14 @@ export default function DashboardPage() {
                 {recentTasks.map((task) => (
                   <div key={task.id} className="group flex items-center gap-4 py-3 first:pt-0 last:pb-0">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-surface-900 group-hover:text-primary transition-colors truncate">
-                        {task.title}
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                          PRIORITY_CONFIG[task.priority as Priority]?.dot || 'bg-yellow-500'
+                        }`} title={`Priority: ${task.priority}`} />
+                        <p className="text-sm font-medium text-surface-900 group-hover:text-primary transition-colors truncate">
+                          {task.title}
+                        </p>
+                      </div>
                       <p className="text-xs text-muted truncate">{task.description}</p>
                     </div>
                     <div className="hidden sm:flex items-center gap-2">

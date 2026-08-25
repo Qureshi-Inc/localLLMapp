@@ -38,6 +38,7 @@ describe('TaskForm Component', () => {
       expect(handleSubmit).toHaveBeenCalledWith({
         title: 'New Task',
         description: 'New Desc',
+        priority: 'Medium',
         status: 'In Progress',
       });
     });
@@ -162,5 +163,87 @@ describe('TaskForm Component', () => {
     expect(screen.getByLabelText(/title/i)).toHaveValue('Second');
     expect(screen.getByLabelText(/description/i)).toHaveValue('Second Desc');
     expect(screen.getByLabelText(/status/i)).toHaveValue('In Progress');
+  });
+
+  it('renders priority quick-select buttons', () => {
+    render(<TaskForm onSubmit={jest.fn()} />);
+
+    expect(screen.getByRole('button', { name: /low/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /medium/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /high/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /urgent/i })).toBeInTheDocument();
+  });
+
+  it('defaults to Medium priority on create', () => {
+    render(<TaskForm onSubmit={jest.fn()} />);
+    const mediumBtn = screen.getByRole('button', { name: /medium/i });
+    expect(mediumBtn).toHaveAttribute('class', expect.stringContaining('bg-warning-100'));
+  });
+
+  it('sets High priority when initialData includes it', () => {
+    render(
+      <TaskForm
+        onSubmit={jest.fn()}
+        initialData={{ title: 'Edit', description: 'Desc', status: 'In Progress', priority: 'High' }}
+      />
+    );
+    const highBtn = screen.getByRole('button', { name: /high/i });
+    expect(highBtn).toHaveAttribute('class', expect.stringContaining('bg-orange-100'));
+  });
+
+  it('includes priority in submission payload', async () => {
+    const handleSubmit = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    render(<TaskForm onSubmit={handleSubmit} />);
+
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'New Task' } });
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'New Desc' } });
+
+    // Select High priority
+    fireEvent.click(screen.getByRole('button', { name: /high/i }));
+
+    fireEvent.click(screen.getByRole('button', { name: /create task/i }));
+
+    await waitFor(() => {
+      expect(handleSubmit).toHaveBeenCalledWith({
+        title: 'New Task',
+        description: 'New Desc',
+        status: 'Todo',
+        priority: 'High',
+      });
+    });
+  });
+
+  it('sets priority class on form submission', async () => {
+    const handleSubmit = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    render(<TaskForm onSubmit={handleSubmit} />);
+
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'Task' } });
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Desc' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /urgent/i }));
+    fireEvent.click(screen.getByRole('button', { name: /create task/i }));
+
+    await waitFor(() => {
+      expect(handleSubmit).toHaveBeenCalledWith(expect.objectContaining({ priority: 'Urgent' }));
+    });
+  });
+
+  it('ignores invalid priority values and defaults to Medium', async () => {
+    const handleSubmit = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    render(<TaskForm onSubmit={handleSubmit} />);
+
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'Task' } });
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Desc' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /create task/i }));
+
+    await waitFor(() => {
+      expect(handleSubmit).toHaveBeenCalledWith({
+        title: 'Task',
+        description: 'Desc',
+        status: 'Todo',
+        priority: 'Medium',
+      });
+    });
   });
 });
