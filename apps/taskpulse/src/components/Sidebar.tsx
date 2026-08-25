@@ -26,64 +26,12 @@ const TasksIcon = () => (
   </svg>
 );
 
-const BoardIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
-  </svg>
-);
-
-const CalendarIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-  </svg>
-);
-
-const TeamIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-  </svg>
-);
-
-const SettingsIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-  </svg>
-);
-
-const AnalyticsIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-  </svg>
-);
-
-const ArchiveIcon = () => (
-  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-  </svg>
-);
-
 const navSections: NavSection[] = [
   {
     title: 'Main',
     items: [
       { label: 'Dashboard', href: '/dashboard', icon: <DashboardIcon /> },
       { label: 'All Tasks', href: '/tasks', icon: <TasksIcon /> },
-      { label: 'Board', href: '/board', icon: <BoardIcon /> },
-    ],
-  },
-  {
-    title: 'Planning',
-    items: [
-      { label: 'Calendar', href: '/calendar', icon: <CalendarIcon /> },
-      { label: 'Team', href: '/team', icon: <TeamIcon /> },
-      { label: 'Analytics', href: '/analytics', icon: <AnalyticsIcon /> },
-    ],
-  },
-  {
-    title: 'Other',
-    items: [
-      { label: 'Archived', href: '/archived', icon: <ArchiveIcon /> },
     ],
   },
 ];
@@ -197,27 +145,6 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             ))}
           </nav>
 
-          <div className="p-3 border-t border-border">
-            <Link
-              href="/settings"
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group
-                ${isActive('/settings')
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-surface-500 hover:text-surface-900 hover:bg-surface-100'
-                }`}
-              title={isCollapsed ? 'Settings' : undefined}
-            >
-              <span className="flex-shrink-0">
-                <SettingsIcon />
-              </span>
-              {!isCollapsed && <span>Settings</span>}
-              {isCollapsed && (
-                <span className="absolute left-16 z-50 hidden px-2 py-1 text-xs text-surface-50 bg-surface-800 rounded-md shadow-lg group-hover:block whitespace-nowrap">
-                  Settings
-                </span>
-              )}
-            </Link>
-          </div>
         </div>
       </aside>
 

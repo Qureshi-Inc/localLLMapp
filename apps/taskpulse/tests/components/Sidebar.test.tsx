@@ -31,27 +31,17 @@ describe('Sidebar Component', () => {
   it('renders navigation section headers when expanded', () => {
     render(<Sidebar isCollapsed={false} onToggle={() => {}} />);
     expect(screen.getByText('Main')).toBeInTheDocument();
-    expect(screen.getByText('Planning')).toBeInTheDocument();
-    expect(screen.getByText('Other')).toBeInTheDocument();
   });
 
   it('hides navigation section headers when collapsed', () => {
     render(<Sidebar isCollapsed={true} onToggle={() => {}} />);
     expect(screen.queryByText('Main')).not.toBeInTheDocument();
-    expect(screen.queryByText('Planning')).not.toBeInTheDocument();
-    expect(screen.queryByText('Other')).not.toBeInTheDocument();
   });
 
   it('renders all navigation items', () => {
     render(<Sidebar isCollapsed={false} onToggle={() => {}} />);
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByText('All Tasks')).toBeInTheDocument();
-    expect(screen.getByText('Board')).toBeInTheDocument();
-    expect(screen.getByText('Calendar')).toBeInTheDocument();
-    expect(screen.getByText('Team')).toBeInTheDocument();
-    expect(screen.getByText('Analytics')).toBeInTheDocument();
-    expect(screen.getByText('Archived')).toBeInTheDocument();
-    expect(screen.getByText('Settings')).toBeInTheDocument();
   });
 
   it('renders collapse toggle button', () => {
@@ -72,7 +62,16 @@ describe('Sidebar Component', () => {
     render(<Sidebar isCollapsed={false} onToggle={() => {}} />);
     const sidebar = document.querySelector('aside');
     const svgElements = sidebar?.querySelectorAll('svg');
-    expect(svgElements?.length).toBeGreaterThan(7);
+    expect(svgElements?.length).toBeGreaterThan(3);
+  });
+
+  it('does not render dead navigation links', () => {
+    render(<Sidebar isCollapsed={false} onToggle={() => {}} />);
+    expect(screen.queryByText('Board')).not.toBeInTheDocument();
+    expect(screen.queryByText('Calendar')).not.toBeInTheDocument();
+    expect(screen.queryByText('Team')).not.toBeInTheDocument();
+    expect(screen.queryByText('Analytics')).not.toBeInTheDocument();
+    expect(screen.queryByText('Archived')).not.toBeInTheDocument();
   });
 
   it('has correct sidebar container structure', () => {
@@ -95,10 +94,10 @@ describe('Sidebar Component', () => {
     expect(toggleButton).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('renders settings link in footer section', () => {
+  it('does not render settings link', () => {
     render(<Sidebar isCollapsed={false} onToggle={() => {}} />);
     const settingsLink = document.querySelector('a[href="/settings"]');
-    expect(settingsLink).toBeInTheDocument();
+    expect(settingsLink).not.toBeInTheDocument();
   });
 
   it('shows tooltip labels when collapsed', () => {
@@ -141,7 +140,7 @@ describe('Sidebar Component', () => {
     const labels = Array.from(navLinks || []).map(a => a?.textContent?.trim());
     expect(labels).toContain('Dashboard');
     expect(labels).toContain('All Tasks');
-    expect(labels).toContain('Board');
+    expect(labels.length).toBe(2);
   });
 
   it('renders mobile overlay with correct classes', () => {
