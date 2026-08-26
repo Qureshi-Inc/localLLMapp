@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import type { Priority } from '@/lib/db';
-import { PRIORITY_CONFIG } from '@/lib/db';
+import type { Priority } from '@/lib/priority';
+import { PRIORITY_CONFIG } from '@/lib/priority';
 import ConfirmDialog from '@/components/ConfirmDialog';
-export type { Priority, PRIORITY_CONFIG };
 
 interface Task {
   id: string;

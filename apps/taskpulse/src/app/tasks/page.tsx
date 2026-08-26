@@ -3,9 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import TaskForm from '@/components/TaskForm';
 import ConfirmDialog from '@/components/ConfirmDialog';
-import type { Priority } from '@/lib/db';
-import { PRIORITY_CONFIG } from '@/lib/db';
-export type { Priority, PRIORITY_CONFIG };
+import type { Priority } from '@/lib/priority';
+import { PRIORITY_CONFIG } from '@/lib/priority';
 
 interface Task {
   id: string;

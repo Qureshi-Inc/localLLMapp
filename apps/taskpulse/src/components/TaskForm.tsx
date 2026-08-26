@@ -1,15 +1,19 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import type { Priority, PRIORITY_CONFIG as PRIORITY_CONFIG_TYPE } from '@/lib/db';
+import type { Priority } from '@/lib/priority';
 
-export type { Priority } from '@/lib/db';
-const PRIORITY_CONFIG = {
+export type { Priority } from '@/lib/priority';
+
+// Form-specific styling: selected/unselected pill states, distinct from the
+// read-only badge styles in @/lib/priority.
+const PRIORITY_OPTIONS: Priority[] = ['Low', 'Medium', 'High', 'Urgent'];
+const PRIORITY_STYLES = {
   'Low': { active: 'bg-surface-200 text-surface-900 ring-surface-400/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-surface-400' },
   'Medium': { active: 'bg-warning-100 text-warning-800 ring-warning-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-yellow-500' },
   'High': { active: 'bg-orange-100 text-orange-800 ring-orange-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-orange-500' },
   'Urgent': { active: 'bg-red-100 text-red-800 ring-red-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-red-500' },
-} as Record<string, { active: string; inactive: string; dot: string }>;
+} satisfies Record<Priority, { active: string; inactive: string; dot: string }>;
 
 interface TaskFormProps {
   onSubmit: (task: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done'; priority: Priority }) => void | Promise<void>;
@@ -257,15 +261,9 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
             Priority
           </label>
           <div className="flex items-center gap-2 flex-wrap">
-            {(['Low', 'Medium', 'High', 'Urgent'] as Priority[]).map((p) => {
-              const config = {
-                'Low': { active: 'bg-surface-200 text-surface-900 ring-surface-400/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-surface-400' },
-                'Medium': { active: 'bg-warning-100 text-warning-800 ring-warning-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-yellow-500' },
-                'High': { active: 'bg-orange-100 text-orange-800 ring-orange-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-orange-500' },
-                'Urgent': { active: 'bg-red-100 text-red-800 ring-red-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-red-500' },
-              } as Record<string, { active: string; inactive: string; dot: string }>;
+            {PRIORITY_OPTIONS.map((p) => {
               const isActive = priority === p;
-              const style = config[p];
+              const style = PRIORITY_STYLES[p];
               return (
                 <button
                   key={p}
