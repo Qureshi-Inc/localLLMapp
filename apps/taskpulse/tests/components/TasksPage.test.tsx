@@ -3,9 +3,9 @@ import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import TasksPage from '@/app/tasks/page';
 
 const mockTasks = [
-  { id: '1', title: 'Task One', description: 'First task description', status: 'Todo' as const, createdAt: '2025-01-15T10:00:00Z' },
-  { id: '2', title: 'Task Two', description: 'Second task description', status: 'In Progress' as const, createdAt: '2025-01-16T10:00:00Z' },
-  { id: '3', title: 'Task Three', description: 'Third task description', status: 'Done' as const, createdAt: '2025-01-17T10:00:00Z' },
+  { id: '1', title: 'Task One', description: 'First task description', status: 'Todo' as const, priority: 'Medium' as const, createdAt: '2025-01-15T10:00:00Z' },
+  { id: '2', title: 'Task Two', description: 'Second task description', status: 'In Progress' as const, priority: 'High' as const, createdAt: '2025-01-16T10:00:00Z' },
+  { id: '3', title: 'Task Three', description: 'Third task description', status: 'Done' as const, priority: 'Low' as const, createdAt: '2025-01-17T10:00:00Z' },
 ];
 
 global.fetch = jest.fn();
@@ -50,8 +50,13 @@ describe('TasksPage Component', () => {
     await act(async () => {
       render(<TasksPage />);
     });
-    const headers = screen.getAllByText(/^(Task|Status|Actions)$/);
-    expect(headers.length).toBeGreaterThanOrEqual(3);
+    const headers = screen.getAllByRole('columnheader');
+    expect(headers.length).toBeGreaterThanOrEqual(4);
+    const headerTexts = headers.map(h => h.textContent).join(' ');
+    expect(headerTexts).toContain('Priority');
+    expect(headerTexts).toContain('Task');
+    expect(headerTexts).toContain('Status');
+    expect(headerTexts).toContain('Actions');
   });
 
   it('displays status badges correctly', async () => {

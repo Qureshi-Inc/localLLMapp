@@ -1,10 +1,19 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
+import type { Priority, PRIORITY_CONFIG as PRIORITY_CONFIG_TYPE } from '@/lib/db';
+
+export type { Priority } from '@/lib/db';
+const PRIORITY_CONFIG = {
+  'Low': { active: 'bg-surface-200 text-surface-900 ring-surface-400/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-surface-400' },
+  'Medium': { active: 'bg-warning-100 text-warning-800 ring-warning-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-yellow-500' },
+  'High': { active: 'bg-orange-100 text-orange-800 ring-orange-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-orange-500' },
+  'Urgent': { active: 'bg-red-100 text-red-800 ring-red-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-red-500' },
+} as Record<string, { active: string; inactive: string; dot: string }>;
 
 interface TaskFormProps {
-  onSubmit: (task: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done' }) => void | Promise<void>;
-  initialData?: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done' };
+  onSubmit: (task: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done'; priority: Priority }) => void | Promise<void>;
+  initialData?: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done'; priority?: Priority };
   onCancel?: () => void;
 }
 
@@ -17,6 +26,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
   const [title, setTitle] = useState(initialData?.title || '');
   const [description, setDescription] = useState(initialData?.description || '');
   const [status, setStatus] = useState<'Todo' | 'In Progress' | 'Done'>(initialData?.status || 'Todo');
+  const [priority, setPriority] = useState<Priority>(initialData?.priority || 'Medium');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errors, setErrors] = useState<FieldError>({});
@@ -26,19 +36,21 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
     setTitle(initialData?.title || '');
     setDescription(initialData?.description || '');
     setStatus(initialData?.status || 'Todo');
+    setPriority(initialData?.priority || 'Medium');
     setErrors({});
     setTouched({});
-  }, [initialData?.title, initialData?.description, initialData?.status]);
+  }, [initialData?.title, initialData?.description, initialData?.status, initialData?.priority]);
 
   useEffect(() => {
     if (isSuccess) {
       const timer = setTimeout(() => {
-        setIsSuccess(false);
-        if (!initialData) {
-          setTitle('');
-          setDescription('');
-          setStatus('Todo');
-        }
+      setIsSuccess(false);
+      if (!initialData) {
+        setTitle('');
+        setDescription('');
+        setStatus('Todo');
+        setPriority('Medium');
+      }
       }, 2500);
       return () => clearTimeout(timer);
     }
@@ -72,7 +84,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
     setIsSubmitting(true);
     setIsSuccess(false);
     try {
-      await onSubmit({ title, description, status });
+      await onSubmit({ title, description, status, priority });
       setIsSuccess(true);
       if (!initialData) {
         setTitle('');
@@ -88,6 +100,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
     setTitle(initialData?.title || '');
     setDescription(initialData?.description || '');
     setStatus(initialData?.status || 'Todo');
+    setPriority(initialData?.priority || 'Medium');
     setErrors({});
     setTouched({});
   };
@@ -236,6 +249,38 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
             <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
             </svg>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="task-priority" className="block text-xs font-medium text-surface-500 uppercase tracking-wide">
+            Priority
+          </label>
+          <div className="flex items-center gap-2 flex-wrap">
+            {(['Low', 'Medium', 'High', 'Urgent'] as Priority[]).map((p) => {
+              const config = {
+                'Low': { active: 'bg-surface-200 text-surface-900 ring-surface-400/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-surface-400' },
+                'Medium': { active: 'bg-warning-100 text-warning-800 ring-warning-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-yellow-500' },
+                'High': { active: 'bg-orange-100 text-orange-800 ring-orange-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-orange-500' },
+                'Urgent': { active: 'bg-red-100 text-red-800 ring-red-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-red-500' },
+              } as Record<string, { active: string; inactive: string; dot: string }>;
+              const isActive = priority === p;
+              const style = config[p];
+              return (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPriority(p)}
+                  disabled={isSubmitting}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ring-1 ring-inset transition-all disabled:opacity-50 ${
+                    isActive ? style.active : style.inactive
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+                  {p}
+                </button>
+              );
+            })}
           </div>
         </div>
 

@@ -1,12 +1,30 @@
 import { NextResponse } from 'next/server';
 import { updateTask, deleteTask } from '@/lib/db';
 
+const ALLOWED_FIELDS = ['title', 'description', 'status', 'priority'];
+const VALID_PRIORITIES = ['Low', 'Medium', 'High', 'Urgent'] as const;
+
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {
   try {
     const { id } = params;
     const body = await request.json();
 
-    const task = await updateTask(id, body);
+    const validatedUpdates: Record<string, string> = {};
+    for (const key of ALLOWED_FIELDS) {
+      if (key in body) {
+        if (key === 'priority') {
+          if (VALID_PRIORITIES.includes(body[key])) {
+            validatedUpdates[key] = body[key];
+          } else {
+            return NextResponse.json({ error: `Invalid priority. Must be one of: ${VALID_PRIORITIES.join(', ')}` }, { status: 400 });
+          }
+        } else {
+          validatedUpdates[key] = String(body[key]);
+        }
+      }
+    }
+
+    const task = await updateTask(id, validatedUpdates);
     if (!task) {
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }

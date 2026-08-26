@@ -33,6 +33,7 @@ describe('API Routes', () => {
           title: 'Test Task',
           description: 'Test Description',
           status: 'Todo',
+          priority: 'High',
         }),
       });
       const response = await POST(request);
@@ -40,6 +41,23 @@ describe('API Routes', () => {
       const data = await response.json();
       expect(data.title).toBe('Test Task');
       expect(data.status).toBe('Todo');
+      expect(data.priority).toBe('High');
+    });
+
+    it('should default priority to Medium when not provided', async () => {
+      const request = new Request('http://localhost/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: 'Test Task',
+          description: 'Test Description',
+          status: 'Done',
+        }),
+      });
+      const response = await POST(request);
+      expect(response.status).toBe(201);
+      const data = await response.json();
+      expect(data.priority).toBe('Medium');
     });
 
     it('should return 400 for missing fields', async () => {
@@ -47,6 +65,21 @@ describe('API Routes', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: 'Test Task' }),
+      });
+      const response = await POST(request);
+      expect(response.status).toBe(400);
+    });
+
+    it('should return 400 for title exceeding 200 characters', async () => {
+      const longTitle = 'a'.repeat(201);
+      const request = new Request('http://localhost/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: longTitle,
+          description: 'Test Description',
+          status: 'Todo',
+        }),
       });
       const response = await POST(request);
       expect(response.status).toBe(400);

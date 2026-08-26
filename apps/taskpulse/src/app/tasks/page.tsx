@@ -2,12 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import TaskForm from '@/components/TaskForm';
+import type { Priority } from '@/lib/db';
+import { PRIORITY_CONFIG } from '@/lib/db';
+export type { Priority, PRIORITY_CONFIG };
 
 interface Task {
   id: string;
   title: string;
   description: string;
   status: 'Todo' | 'In Progress' | 'Done';
+  priority: Priority;
   createdAt: string;
 }
 
@@ -71,7 +75,7 @@ export default function TasksPage() {
     fetchTasks();
   }, []);
 
-  const handleCreate = async (task: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done' }) => {
+  const handleCreate = async (task: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done'; priority: Priority }) => {
     try {
       const res = await fetch('/api/tasks', {
         method: 'POST',
@@ -85,7 +89,7 @@ export default function TasksPage() {
     }
   };
 
-  const handleUpdate = async (task: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done' }) => {
+  const handleUpdate = async (task: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done'; priority: Priority }) => {
     if (!editingTask) return;
     try {
       const res = await fetch(`/api/tasks/${editingTask.id}`, {
@@ -170,6 +174,9 @@ export default function TasksPage() {
               <thead>
                 <tr className="bg-surface-50 border-b border-surface-200">
                   <th scope="col" className="text-left py-3.5 px-4 font-semibold text-surface-700 min-w-[200px]">
+                    Priority
+                  </th>
+                  <th scope="col" className="text-left py-3.5 px-4 font-semibold text-surface-700 min-w-[200px]">
                     Task
                   </th>
                   <th scope="col" className="text-left py-3.5 px-4 font-semibold text-surface-700 min-w-[140px]">
@@ -189,6 +196,17 @@ export default function TasksPage() {
                     key={task.id}
                     className="group transition-colors hover:bg-primary-50/50"
                   >
+                    <td className="py-3.5 px-4">
+                      <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
+                        PRIORITY_CONFIG[task.priority as Priority]?.badge || PRIORITY_CONFIG['Medium'].badge
+                      } ${PRIORITY_CONFIG[task.priority as Priority]?.text || PRIORITY_CONFIG['Medium'].text}`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          PRIORITY_CONFIG[task.priority as Priority]?.dot || PRIORITY_CONFIG['Medium'].dot
+                        }`} />
+                        {task.priority}
+                      </span>
+                    </td>
                     <td className="py-3.5 px-4">
                       <div className="min-w-0">
                         <p className="font-medium text-surface-900 truncate">{task.title}</p>
