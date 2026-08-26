@@ -1,5 +1,5 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import DashboardPage from '@/app/dashboard/page';
 
 jest.mock('next/navigation', () => ({
@@ -197,6 +197,41 @@ describe('Dashboard Component', () => {
     await waitFor(() => {
       const deleteButtons = document.querySelectorAll('[title="Delete"]');
       expect(deleteButtons.length).toBe(3);
+    });
+  });
+
+  it('opens delete confirmation dialog when delete button is clicked', async () => {
+    render(<DashboardPage />);
+    await waitFor(() => {
+      const deleteButtons = document.querySelectorAll('[title="Delete"]');
+      expect(deleteButtons.length).toBe(3);
+    });
+    const deleteButton = document.querySelectorAll('[title="Delete"]')[0];
+    fireEvent.click(deleteButton);
+    const dialog = document.querySelector('[role="dialog"]');
+    expect(dialog).toBeInTheDocument();
+    expect(dialog?.textContent).toContain('Delete Task');
+    expect(dialog?.textContent).toMatch(/are you sure you want to delete/i);
+    const cancelButtons = dialog?.querySelectorAll('button');
+    expect(cancelButtons && cancelButtons.length >= 2).toBe(true);
+  });
+
+  it('closes confirmation dialog when cancel is clicked', async () => {
+    render(<DashboardPage />);
+    await waitFor(() => {
+      const deleteButtons = document.querySelectorAll('[title="Delete"]');
+      expect(deleteButtons.length).toBe(3);
+    });
+    const deleteButton = document.querySelectorAll('[title="Delete"]')[0];
+    fireEvent.click(deleteButton);
+    const dialog = document.querySelector('[role="dialog"]');
+    const cancelBtn = dialog?.querySelector('button');
+    if (cancelBtn) {
+      fireEvent.click(cancelBtn);
+    }
+    await waitFor(() => {
+      const confirmDialogs = document.querySelectorAll('[role="dialog"]');
+      expect(confirmDialogs.length).toBe(0);
     });
   });
 

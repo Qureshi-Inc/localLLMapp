@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import type { Priority } from '@/lib/db';
 import { PRIORITY_CONFIG } from '@/lib/db';
+import ConfirmDialog from '@/components/ConfirmDialog';
 export type { Priority, PRIORITY_CONFIG };
 
 interface Task {
@@ -255,6 +256,11 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; taskId: string | null; taskTitle: string }>({
+    isOpen: false,
+    taskId: null,
+    taskTitle: '',
+  });
 
   useEffect(() => {
     const fetchTasks = async () => {
@@ -277,15 +283,25 @@ export default function DashboardPage() {
   const doneCount = tasks.filter(t => t.status === 'Done').length;
   const totalTasks = tasks.length;
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback((task: Task) => {
+    setDeleteDialog({ isOpen: true, taskId: task.id, taskTitle: task.title });
+  }, []);
+
+  const handleConfirmDelete = async () => {
+    if (!deleteDialog.taskId) return;
     try {
-      const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/tasks/${deleteDialog.taskId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete task');
-      setTasks(prev => prev.filter(t => t.id !== id));
+      setTasks(prev => prev.filter(t => t.id !== deleteDialog.taskId));
+      setDeleteDialog({ isOpen: false, taskId: null, taskTitle: '' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete task');
     }
   };
+
+  const handleCancelDelete = useCallback(() => {
+    setDeleteDialog({ isOpen: false, taskId: null, taskTitle: '' });
+  }, []);
 
   const handleToggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = (STATUS_CYCLE[currentStatus] || 'Todo') as 'Todo' | 'In Progress' | 'Done';
@@ -461,7 +477,7 @@ export default function DashboardPage() {
                         )}
                       </button>
                       <button
-                        onClick={() => handleDelete(task.id)}
+                        onClick={() => handleDelete(task)}
                         className="p-1.5 rounded-md hover:bg-danger-50 text-muted hover:text-danger-600 transition-colors"
                         title="Delete"
                       >
@@ -469,8 +485,18 @@ export default function DashboardPage() {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                       </button>
-                    </div>
-                  </div>
+      </div>
+
+      <ConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        title="Delete Task"
+        message={`Are you sure you want to delete "${deleteDialog.taskTitle}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+      />
+    </div>
                 ))}
               </div>
             )}

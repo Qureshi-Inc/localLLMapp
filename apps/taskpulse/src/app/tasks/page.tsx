@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import TaskForm from '@/components/TaskForm';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import type { Priority } from '@/lib/db';
 import { PRIORITY_CONFIG } from '@/lib/db';
 export type { Priority, PRIORITY_CONFIG };
@@ -57,6 +58,11 @@ export default function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; taskId: string | null; taskTitle: string }>({
+    isOpen: false,
+    taskId: null,
+    taskTitle: '',
+  });
 
   const fetchTasks = async () => {
     try {
@@ -114,6 +120,25 @@ export default function TasksPage() {
       setError(err instanceof Error ? err.message : 'Failed to delete task');
     }
   };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog.taskId) return;
+    try {
+      const res = await fetch(`/api/tasks/${deleteDialog.taskId}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete task');
+      setTasks(prev => prev.filter(t => t.id !== deleteDialog.taskId));
+      if (editingTask?.id === deleteDialog.taskId) {
+        setEditingTask(null);
+      }
+      setDeleteDialog({ isOpen: false, taskId: null, taskTitle: '' });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete task');
+    }
+  };
+
+  const handleDeleteCancel = useCallback(() => {
+    setDeleteDialog({ isOpen: false, taskId: null, taskTitle: '' });
+  }, []);
 
   const handleToggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = (STATUS_CYCLE[currentStatus] || 'Todo') as 'Todo' | 'In Progress' | 'Done';
@@ -257,7 +282,7 @@ export default function TasksPage() {
                           Edit
                         </button>
                         <button
-                          onClick={() => handleDelete(task.id)}
+                          onClick={() => setDeleteDialog({ isOpen: true, taskId: task.id, taskTitle: task.title })}
                           className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md text-danger-700 bg-danger-50 hover:bg-danger-100 border border-danger-200/60 hover:border-danger-300 transition-colors"
                           title="Delete task"
                         >
@@ -275,6 +300,16 @@ export default function TasksPage() {
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        title="Delete Task"
+        message={`Are you sure you want to delete "${deleteDialog.taskTitle}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+      />
     </div>
   );
 }
