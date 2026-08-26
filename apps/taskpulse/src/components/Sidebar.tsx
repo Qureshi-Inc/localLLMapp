@@ -135,7 +135,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                     </span>
                     {!isCollapsed && <span>{item.label}</span>}
                     {isCollapsed && (
-                      <span className="absolute left-16 z-50 hidden px-2 py-1 text-xs text-surface-50 bg-surface-800 rounded-md shadow-lg group-hover:block whitespace-nowrap">
+                      <span className="pointer-events-none absolute left-full ml-2 z-50 hidden px-2 py-1 text-xs text-surface-50 bg-surface-800 rounded-md shadow-lg group-hover:block whitespace-nowrap">
                         {item.label}
                       </span>
                     )}
@@ -148,13 +148,6 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
         </div>
       </aside>
 
-      <div
-        className={`fixed top-0 left-0 z-30 w-screen h-screen bg-black/50 transition-opacity duration-300 md:hidden ${
-          isCollapsed ? 'opacity-0 pointer-events-none' : 'opacity-100 pointer-events-auto'
-        }`}
-        onClick={onToggle}
-        aria-hidden="true"
-      />
     </>
   );
 }
