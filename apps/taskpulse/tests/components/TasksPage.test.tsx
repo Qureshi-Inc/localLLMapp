@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
 import TasksPage from '@/app/tasks/page';
 
 const mockTasks = [
@@ -123,5 +123,32 @@ describe('TasksPage Component', () => {
     expect(screen.getByText('Jan 15, 2025')).toBeInTheDocument();
     expect(screen.getByText('Jan 16, 2025')).toBeInTheDocument();
     expect(screen.getByText('Jan 17, 2025')).toBeInTheDocument();
+  });
+
+  it('opens delete confirmation dialog when delete button is clicked', async () => {
+    await act(async () => {
+      render(<TasksPage />);
+    });
+    const deleteButtons = document.querySelectorAll('[title="Delete task"]');
+    await act(async () => {
+      fireEvent.click(deleteButtons[0]);
+    });
+    const dialog = document.querySelector('[role="dialog"]');
+    expect(dialog).toBeInTheDocument();
+    expect(dialog?.textContent).toContain('Delete Task');
+    expect(dialog?.textContent).toMatch(/are you sure you want to delete/i);
+  });
+
+  it('has cancel and delete buttons in confirmation dialog', async () => {
+    await act(async () => {
+      render(<TasksPage />);
+    });
+    const deleteButtons = document.querySelectorAll('[title="Delete task"]');
+    await act(async () => {
+      fireEvent.click(deleteButtons[0]);
+    });
+    const dialog = document.querySelector('[role="dialog"]');
+    expect(within(dialog!).getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    expect(within(dialog!).getByRole('button', { name: 'Delete' })).toBeInTheDocument();
   });
 });
