@@ -22,16 +22,16 @@ export default function Navbar() {
   const isActive = (href: string) => pathname === href;
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-surface-50/80 backdrop-blur-md border-b border-border">
+    <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-border shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link
             href="/"
-            className="flex items-center gap-2 text-xl font-bold text-primary hover:text-primary-600 transition-colors duration-200"
+            className="flex items-center gap-2.5 group"
           >
-            <span className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
+            <span className="relative w-8 h-8 rounded-lg bg-gradient-to-br from-primary-400 to-primary-700 flex items-center justify-center shadow-md group-hover:shadow-[0_0_16px_0_rgb(59_141_255_/_0.45)] transition-shadow duration-300">
               <svg
-                className="w-5 h-5 text-primary-foreground"
+                className="w-5 h-5 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -44,7 +44,9 @@ export default function Navbar() {
                 />
               </svg>
             </span>
-            <span className="font-heading">TaskPulse</span>
+            <span className="text-xl font-bold font-heading bg-gradient-to-r from-primary-600 to-primary-400 bg-clip-text text-transparent">
+              TaskPulse
+            </span>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">
@@ -52,13 +54,16 @@ export default function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                   isActive(item.href)
-                    ? 'bg-primary/10 text-primary'
+                    ? 'text-primary bg-primary/10'
                     : 'text-surface-500 hover:text-surface-900 hover:bg-surface-100'
                 }`}
               >
                 {item.label}
+                {isActive(item.href) && (
+                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+                )}
               </Link>
             ))}
           </nav>
