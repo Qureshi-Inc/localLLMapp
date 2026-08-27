@@ -49,10 +49,9 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   return (
     <>
       <aside
-        className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] bg-surface-50 border-r border-border transition-all duration-300 ease-in-out
+        className={`hidden md:flex flex-col fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] bg-surface-50 border-r border-border transition-all duration-300 ease-in-out
           ${isCollapsed ? 'w-20' : 'w-64'}`}
       >
-        <div className="flex flex-col h-full">
           <div className="flex items-center justify-end h-12 px-4 border-b border-border">
             <button
               type="button"
@@ -108,7 +107,6 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             ))}
           </nav>
 
-        </div>
       </aside>
 
     </>
