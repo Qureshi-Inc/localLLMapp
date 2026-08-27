@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: #ffffff;
+    --background: #f8f9fb;
     --foreground: #18181b;
     --card: #ffffff;
     --card-foreground: #18181b;
@@ -27,6 +27,8 @@
     --font-body: "Inter", system-ui, sans-serif;
     --font-mono: "JetBrains Mono", "Fira Code", monospace;
     --radius: 0.5rem;
+    --glow-primary: 0 0 24px 0 rgb(59 141 255 / 0.18);
+    --glow-accent: 0 0 24px 0 rgb(255 136 59 / 0.15);
   }
 
   .dark {
@@ -107,6 +109,50 @@
   }
 }
 
+@layer components {
+  /* Glassmorphism card */
+  .glass {
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .glass-dark {
+    background: rgba(24, 24, 27, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  /* Glow variants */
+  .glow-primary {
+    box-shadow: var(--glow-primary);
+  }
+
+  .glow-accent {
+    box-shadow: var(--glow-accent);
+  }
+
+  /* Gradient border */
+  .gradient-border {
+    position: relative;
+  }
+
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(59, 141, 255, 0.4), rgba(139, 126, 170, 0.2), rgba(255, 136, 59, 0.3));
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
@@ -165,10 +211,6 @@
     border-radius: 0;
   }
 
-  .no-prose * {
-    all: revert;
-  }
-
   .animate-in {
     animation-fill-mode: both;
   }
@@ -183,6 +225,12 @@
 
   .animate-fade-in {
     animation: fadeIn 0.2s ease both;
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2.5s linear infinite;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%);
+    background-size: 200% 100%;
   }
 }
 
@@ -215,4 +263,19 @@
   to {
     opacity: 1;
   }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px 0 rgb(59 141 255 / 0.3); }
+  50% { box-shadow: 0 0 24px 4px rgb(59 141 255 / 0.5); }
 }

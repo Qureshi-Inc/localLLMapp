@@ -49,48 +49,11 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   return (
     <>
       <aside
-        className={`fixed left-0 top-0 z-40 h-screen bg-surface-50 border-r border-border transition-all duration-300 ease-in-out
+        className={`fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] bg-surface-50 border-r border-border transition-all duration-300 ease-in-out
           ${isCollapsed ? 'w-20' : 'w-64'}`}
       >
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between h-16 px-4 border-b border-border">
-            {!isCollapsed && (
-              <Link href="/" className="flex items-center gap-2 text-xl font-bold text-primary hover:text-primary-600 transition-colors duration-200">
-                <span className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-                  <svg
-                    className="w-5 h-5 text-primary-foreground"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-                    />
-                  </svg>
-                </span>
-                <span className="font-heading">TaskPulse</span>
-              </Link>
-            )}
-            {isCollapsed && (
-              <Link href="/" className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary hover:bg-primary-600 transition-colors duration-200">
-                <svg
-                  className="w-5 h-5 text-primary-foreground"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
-                  />
-                </svg>
-              </Link>
-            )}
+          <div className="flex items-center justify-end h-12 px-4 border-b border-border">
             <button
               type="button"
               onClick={onToggle}
@@ -122,10 +85,10 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group
+                    className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group
                       ${isActive(item.href)
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-surface-500 hover:text-surface-900 hover:bg-surface-100'
+                        ? 'bg-primary/10 text-primary border-l-2 border-primary'
+                        : 'text-surface-500 hover:text-surface-900 hover:bg-surface-100 border-l-2 border-transparent'
                       }`}
                     title={isCollapsed ? item.label : undefined}
                     aria-current={isActive(item.href) ? 'page' : undefined}
