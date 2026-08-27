@@ -15,7 +15,7 @@ export default function ClientRoot({ children }: { children: React.ReactNode }) 
         <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
         <main
           className={`flex-1 transition-all duration-300 ease-in-out
-            ${sidebarCollapsed ? 'ml-20' : 'ml-64'}
+            ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-64'}
             p-4 sm:p-6 lg:p-8`}
         >
           {children}
