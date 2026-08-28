@@ -12,30 +12,13 @@ interface FooterSection {
 
 const productLinks: FooterLink[] = [
   { label: 'Features', href: '/#features' },
-  { label: 'Pricing', href: '/#pricing' },
-  { label: 'Integrations', href: '/integrations' },
-  { label: 'Changelog', href: '/changelog' },
 ];
 
-const resourceLinks: FooterLink[] = [
-  { label: 'Documentation', href: '/docs' },
-  { label: 'API Reference', href: '/docs/api' },
-  { label: 'Guides', href: '/guides' },
-  { label: 'Community', href: '/community' },
-];
+const resourceLinks: FooterLink[] = [];
 
-const companyLinks: FooterLink[] = [
-  { label: 'About', href: '/about' },
-  { label: 'Blog', href: '/blog' },
-  { label: 'Careers', href: '/careers' },
-  { label: 'Contact', href: '/contact' },
-];
+const companyLinks: FooterLink[] = [];
 
-const legalLinks: FooterLink[] = [
-  { label: 'Privacy Policy', href: '/privacy' },
-  { label: 'Terms of Service', href: '/terms' },
-  { label: 'Cookie Policy', href: '/cookies' },
-];
+const legalLinks: FooterLink[] = [];
 
 const socialLinks: { label: string; href: string; icon: React.ReactNode }[] = [
   {
@@ -165,17 +148,6 @@ export default function Footer() {
           <p className="text-xs text-surface-500">
             &copy; {currentYear} TaskPulse. All rights reserved.
           </p>
-          <div className="flex items-center gap-6">
-            {legalLinks.map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="text-xs text-surface-500 hover:text-white transition-colors duration-200"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
         </div>
       </div>
     </footer>

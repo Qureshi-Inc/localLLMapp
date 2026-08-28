@@ -180,11 +180,6 @@ const config: Config = {
         "inner": "inset 0 2px 4px 0 rgb(0 0 0 / 0.05)",
         "glow": "0 0 20px 0 rgb(59 137 255 / 0.15)",
       },
-      transitionTimingFunction: {
-        "in-expo": "cubic-bezier(0.95, 0.05, 0.80, 0.15)",
-        "out-expo": "cubic-bezier(0.19, 1.00, 0.22, 1.00)",
-        "in-out-quint": "cubic-bezier(0.83, 0, 0.17, 1)",
-      },
     },
   },
   plugins: [],
