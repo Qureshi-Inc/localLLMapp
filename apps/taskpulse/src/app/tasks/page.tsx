@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import TaskForm from '@/components/TaskForm';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import type { Priority } from '@/lib/priority';
@@ -42,6 +42,23 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
+const SkeletonTableRows = () => (
+  <div className="divide-y divide-surface-100">
+    {Array.from({ length: 5 }).map((_, i) => (
+      <div key={i} className="py-3.5 px-4 flex items-center gap-4 animate-pulse">
+        <div className="w-20 h-4 bg-surface-200 rounded" />
+        <div className="flex-1">
+          <div className="w-48 h-4 bg-surface-200 rounded mb-1" />
+          <div className="w-72 h-3 bg-surface-100 rounded" />
+        </div>
+        <div className="w-16 h-6 bg-surface-200 rounded-full" />
+        <div className="w-20 h-4 bg-surface-200 rounded hidden sm:block" />
+        <div className="w-48 h-4 bg-surface-200 rounded hidden"/>
+      </div>
+    ))}
+  </div>
+);
+
 const EmptyState = () => (
   <div className="flex flex-col items-center justify-center py-16 px-4">
     <svg className="w-16 h-16 text-surface-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -52,11 +69,31 @@ const EmptyState = () => (
   </div>
 );
 
+const NotFoundState = () => (
+  <div className="text-center py-16 px-4">
+    <svg className="w-16 h-16 text-surface-300 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+    </svg>
+    <h3 className="text-lg font-medium text-surface-900 mb-1">No tasks found</h3>
+    <p className="text-sm text-muted">Try adjusting your search or filter to find what you&apos;re looking for.</p>
+  </div>
+);
+
+function debounce(fn: (...args: string[]) => void, delay: number) {
+  let timer: ReturnType<typeof setTimeout>;
+  return (...args: string[]) => {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), delay);
+  };
+}
+
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('All');
   const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; taskId: string | null; taskTitle: string }>({
     isOpen: false,
     taskId: null,
@@ -154,11 +191,32 @@ export default function TasksPage() {
     }
   };
 
+  const clearFilters = useCallback(() => {
+    setSearch('');
+    setStatusFilter('All');
+  }, []);
+
+  const debouncedSearch = useCallback(debounce((value: string) => {
+    setSearch(value);
+  }, 300), []);
+
+  const filteredTasks = tasks.filter(task => {
+    const matchesStatus = statusFilter === 'All' || task.status === statusFilter;
+    const searchLower = search.toLowerCase();
+    const matchesSearch = !search ||
+      task.title.toLowerCase().includes(searchLower) ||
+      task.description.toLowerCase().includes(searchLower);
+    return matchesStatus && matchesSearch;
+  });
+
+  const hasActiveFilters = search.length > 0 || statusFilter !== 'All';
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <div className="relative">
-          <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+      <div className="space-y-6">
+        <div className="w-32 h-7 bg-surface-200 rounded animate-pulse" />
+        <div className="bg-white rounded-xl border border-surface-200 shadow-sm overflow-hidden">
+          <SkeletonTableRows />
         </div>
       </div>
     );
@@ -189,9 +247,55 @@ export default function TasksPage() {
         <TaskForm onSubmit={handleCreate} />
       )}
 
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-white rounded-xl border border-surface-200 shadow-sm p-3">
+        <div className="relative flex-1 w-full">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search tasks..."
+            value={search}
+            onChange={(e) => debouncedSearch(e.target.value)}
+            className="w-full pl-9 pr-8 py-2 text-sm rounded-lg border border-surface-200 bg-surface-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
+          />
+          {search && (
+            <button
+              onClick={() => { setSearch(''); if (statusFilter === 'All') clearFilters(); }}
+              className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 rounded text-muted hover:text-surface-700"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="px-3 py-2 text-sm rounded-lg border border-surface-200 bg-surface-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors cursor-pointer"
+        >
+          <option value="All">All Status</option>
+          <option value="Todo">Todo</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Done">Done</option>
+        </select>
+        {hasActiveFilters && (
+          <button
+            onClick={clearFilters}
+            className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-muted hover:text-primary transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Clear all
+          </button>
+        )}
+      </div>
+
       <div className="bg-white rounded-xl border border-surface-200 shadow-sm overflow-hidden">
-        {tasks.length === 0 ? (
-          <EmptyState />
+        {filteredTasks.length === 0 ? (
+          tasks.length === 0 ? <EmptyState /> : <NotFoundState />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -215,7 +319,7 @@ export default function TasksPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface-100">
-                {tasks.map((task) => (
+                {filteredTasks.map((task) => (
                   <tr
                     key={task.id}
                     className="group transition-colors hover:bg-primary-50/50"
@@ -282,8 +386,9 @@ export default function TasksPage() {
                         </button>
                         <button
                           onClick={() => setDeleteDialog({ isOpen: true, taskId: task.id, taskTitle: task.title })}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md text-danger-700 bg-danger-50 hover:bg-danger-100 border border-danger-200/60 hover:border-danger-300 transition-colors"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium rounded-md text-danger-700 bg-danger-50 hover:bg-danger-100 border border-danger-200/60 hover:border-danger-300 transition-colors focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-danger-500 focus:ring-offset-2"
                           title="Delete task"
+                          aria-label={`Delete task: ${task.title}`}
                         >
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />

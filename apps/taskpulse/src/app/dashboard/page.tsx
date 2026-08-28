@@ -55,15 +55,28 @@ const statusConfig: Record<string, { color: string; bg: string; bgHover: string;
   },
 };
 
-const activityData = [
-  { label: 'Mon', value: 65 },
-  { label: 'Tue', value: 85 },
-  { label: 'Wed', value: 45 },
-  { label: 'Thu', value: 90 },
-  { label: 'Fri', value: 70 },
-  { label: 'Sat', value: 35 },
-  { label: 'Sun', value: 20 },
-];
+const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const last7Days = dayLabels.slice(-7);
+
+function computeActivityData(tasks: Task[]): { label: string; value: number }[] {
+  const counts = last7Days.map(() => 0);
+  const now = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const dayLabel = dayLabels[d.getDay()];
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+    tasks.forEach(task => {
+      if (task.createdAt.startsWith(dateStr)) {
+        counts[6 - i]++;
+      }
+    });
+  }
+  return last7Days.map((label, i) => ({ label, value: counts[i] }));
+}
 
 interface StatCardProps {
   label: string;
@@ -129,8 +142,9 @@ function ChartPlaceholder({ title, subtitle, children }: { title: string; subtit
   );
 }
 
-function BarChart() {
-  const maxVal = Math.max(...activityData.map(d => d.value));
+function BarChart({ tasks }: { tasks: Task[] }) {
+  const activityData = computeActivityData(tasks);
+  const maxVal = Math.max(...activityData.map(d => d.value), 1);
 
   return (
     <div className="flex items-end gap-2 sm:gap-3 h-48">
@@ -152,11 +166,11 @@ function BarChart() {
   );
 }
 
-function DonutChartPlaceholder() {
-  const total = 48;
-  const completed = 18;
-  const inProgress = 16;
-  const todo = 14;
+function DonutChart({ tasks }: { tasks: Task[] }) {
+  const total = tasks.length;
+  const completed = tasks.filter(t => t.status === 'Done').length;
+  const inProgress = tasks.filter(t => t.status === 'In Progress').length;
+  const todo = tasks.filter(t => t.status === 'Todo').length;
 
   const completedPct = total > 0 ? (completed / total) * 100 : 0;
   const inProgressPct = total > 0 ? (inProgress / total) * 100 : 0;
@@ -167,27 +181,31 @@ function DonutChartPlaceholder() {
       <div className="relative w-36 h-36 flex-shrink-0">
         <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
           <circle cx="18" cy="18" r="15.915" fill="none" stroke="#e4e4e7" strokeWidth="3" />
-          <circle
-            cx="18" cy="18" r="15.915" fill="none"
-            stroke="#10b981" strokeWidth="3"
-            strokeDasharray={`${completedPct} ${100 - completedPct}`}
-            strokeDashoffset="0"
-            strokeLinecap="round"
-          />
-          <circle
-            cx="18" cy="18" r="15.915" fill="none"
-            stroke="#f59e0b" strokeWidth="3"
-            strokeDasharray={`${inProgressPct} ${100 - inProgressPct}`}
-            strokeDashoffset={`-${completedPct}`}
-            strokeLinecap="round"
-          />
-          <circle
-            cx="18" cy="18" r="15.915" fill="none"
-            stroke="#71717a" strokeWidth="3"
-            strokeDasharray={`${todoPct} ${100 - todoPct}`}
-            strokeDashoffset={`-${completedPct + inProgressPct}`}
-            strokeLinecap="round"
-          />
+          {total > 0 && (
+            <>
+              <circle
+                cx="18" cy="18" r="15.915" fill="none"
+                stroke="#10b981" strokeWidth="3"
+                strokeDasharray={`${completedPct} ${100 - completedPct}`}
+                strokeDashoffset="0"
+                strokeLinecap="round"
+              />
+              <circle
+                cx="18" cy="18" r="15.915" fill="none"
+                stroke="#f59e0b" strokeWidth="3"
+                strokeDasharray={`${inProgressPct} ${100 - inProgressPct}`}
+                strokeDashoffset={`-${completedPct}`}
+                strokeLinecap="round"
+              />
+              <circle
+                cx="18" cy="18" r="15.915" fill="none"
+                stroke="#71717a" strokeWidth="3"
+                strokeDasharray={`${todoPct} ${100 - todoPct}`}
+                strokeDashoffset={`-${completedPct + inProgressPct}`}
+                strokeLinecap="round"
+              />
+            </>
+          )}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-2xl font-bold text-surface-900">{total}</span>
@@ -319,10 +337,40 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="flex flex-col items-center gap-4">
+      <div className="space-y-6">
+        <div className="flex items-center justify-center py-20">
           <div className="w-10 h-10 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-          <p className="text-sm text-muted">Loading dashboard...</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="bg-white rounded-xl border border-border shadow-sm p-5 sm:p-6 animate-pulse">
+              <div className="w-10 h-10 bg-surface-200 rounded-lg mb-4" />
+              <div className="w-20 h-4 bg-surface-200 rounded mb-2" />
+              <div className="w-16 h-8 bg-surface-200 rounded mb-4" />
+              <div className="w-full h-2 bg-surface-200 rounded" />
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          <div className="bg-white rounded-xl border border-border shadow-sm p-5 sm:p-6 animate-pulse">
+            <div className="w-40 h-5 bg-surface-200 rounded mb-6" />
+            <div className="flex items-end gap-3 h-48">
+              {[0.65, 0.85, 0.45, 0.9, 0.7, 0.35, 0.2].map((h, i) => (
+                <div key={i} className="flex-1 bg-surface-200 rounded-t-md" style={{ height: `${h * 160}px` }} />
+              ))}
+            </div>
+          </div>
+          <div className="bg-white rounded-xl border border-border shadow-sm p-5 sm:p-6 animate-pulse">
+            <div className="w-40 h-5 bg-surface-200 rounded mb-6" />
+            <div className="flex items-center gap-6">
+              <div className="w-36 h-36 rounded-full bg-surface-200" />
+              <div className="flex-1 space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="w-full h-4 bg-surface-200 rounded" />
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -390,14 +438,14 @@ export default function DashboardPage() {
           title="Weekly Activity"
           subtitle="Tasks created per day this week"
         >
-          <BarChart />
+          <BarChart tasks={tasks} />
         </ChartPlaceholder>
 
         <ChartPlaceholder
           title="Task Distribution"
           subtitle="Breakdown by status"
         >
-          <DonutChartPlaceholder />
+          <DonutChart tasks={tasks} />
         </ChartPlaceholder>
       </div>
 
@@ -459,10 +507,10 @@ export default function DashboardPage() {
                         {task.status}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/50 group-hover:bg-white inset-shadow-sm transition-colors">
                       <button
                         onClick={() => handleToggleStatus(task.id, task.status)}
-                        className="p-1.5 rounded-md hover:bg-surface-100 text-muted hover:text-surface-700 transition-colors"
+                        className="p-1.5 rounded-md hover:bg-surface-100 text-muted hover:text-surface-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                         title={task.status === 'Done' ? 'Reopen' : 'Complete'}
                       >
                         {task.status === 'Done' ? (
@@ -477,7 +525,7 @@ export default function DashboardPage() {
                       </button>
                       <button
                         onClick={() => handleDelete(task)}
-                        className="p-1.5 rounded-md hover:bg-danger-50 text-muted hover:text-danger-600 transition-colors"
+                        className="p-1.5 rounded-md hover:bg-danger-50 text-muted hover:text-danger-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-500"
                         title="Delete"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -529,7 +577,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted">This Week</span>
                 <span className="text-lg font-bold text-primary">
-                  {activityData.reduce((sum, d) => sum + d.value, 0)}
+                  {computeActivityData(tasks).reduce((sum, d) => sum + d.value, 0)}
                 </span>
               </div>
             </div>
