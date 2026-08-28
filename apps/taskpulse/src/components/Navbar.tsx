@@ -1,25 +1,39 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { isAuthenticated, logout } from '@/lib/auth';
 
 interface NavItem {
   label: string;
   href: string;
 }
 
-const navItems: NavItem[] = [
-  { label: 'Home', href: '/' },
+const appNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard' },
   { label: 'Tasks', href: '/tasks' },
 ];
 
 export default function Navbar() {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const router = useRouter();
   const pathname = usePathname();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAuthed, setIsAuthed] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setIsAuthed(isAuthenticated());
+    setLoading(false);
+  }, [pathname]);
 
   const isActive = (href: string) => pathname === href;
+
+  const handleLogout = () => {
+    logout();
+    setIsAuthed(false);
+    router.push('/login');
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-border shadow-sm">
@@ -49,42 +63,71 @@ export default function Navbar() {
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive(item.href)
-                    ? 'text-primary bg-primary/10'
-                    : 'text-surface-500 hover:text-surface-900 hover:bg-surface-100'
-                }`}
-              >
-                {item.label}
-                {isActive(item.href) && (
-                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
-                )}
-              </Link>
-            ))}
-          </nav>
+          {isAuthed && !loading && (
+            <nav className="hidden md:flex items-center gap-1">
+              {appNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    isActive(item.href)
+                      ? 'text-primary bg-primary/10'
+                      : 'text-surface-500 hover:text-surface-900 hover:bg-surface-100'
+                  }`}
+                >
+                  {item.label}
+                  {isActive(item.href) && (
+                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+                  )}
+                </Link>
+              ))}
+            </nav>
+          )}
 
-          <button
-            type="button"
-            className="md:hidden p-2 rounded-lg text-surface-500 hover:text-surface-900 hover:bg-surface-100 transition-colors duration-200"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Toggle navigation menu"
-            aria-expanded={isMenuOpen}
-          >
-            {isMenuOpen ? (
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+          <div className="flex items-center gap-3">
+            {isAuthed && !loading ? (
+              <div className="hidden sm:flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border border-border hover:bg-surface-50 transition-colors"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                  </svg>
+                  Logout
+                </button>
+              </div>
+            ) : !loading && (
+              <Link
+                href="/login"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-600 transition-colors shadow-sm"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                </svg>
+                Sign In
+              </Link>
             )}
-          </button>
+
+            <button
+              type="button"
+              className="md:hidden p-2 rounded-lg text-surface-500 hover:text-surface-900 hover:bg-surface-100 transition-colors duration-200"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="Toggle navigation menu"
+              aria-expanded={isMenuOpen}
+            >
+              {isMenuOpen ? (
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -94,20 +137,43 @@ export default function Navbar() {
         }`}
       >
         <nav className="px-4 pb-4 space-y-1">
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`block px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                isActive(item.href)
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-surface-500 hover:text-surface-900 hover:bg-surface-100'
-              }`}
-              onClick={() => setIsMenuOpen(false)}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {isAuthed ? (
+            <>
+              {appNavItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`block px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    isActive(item.href)
+                      ? 'bg-primary/10 text-primary'
+                      : 'text-surface-500 hover:text-surface-900 hover:bg-surface-100'
+                  }`}
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+              <div className="border-t border-border pt-2 mt-2">
+                <button
+                  type="button"
+                  onClick={() => { handleLogout(); setIsMenuOpen(false); }}
+                  className="w-full px-4 py-3 text-sm font-medium rounded-lg border border-border hover:bg-surface-50 transition-colors text-danger-600 hover:text-danger-700 hover:border-danger-200 text-left"
+                >
+                  Logout
+                </button>
+              </div>
+            </>
+          ) : (
+            !loading && (
+              <Link
+                href="/login"
+                className="block px-4 py-3 rounded-lg text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Sign In
+              </Link>
+            )
+          )}
         </nav>
       </div>
     </header>
