@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Navbar from '@/components/Navbar';
 
 const features = [
   {
@@ -91,9 +92,10 @@ const stats = [
 export default function Home() {
   return (
     <div className="flex flex-col items-center w-full">
+      <Navbar />
       {/* Hero Section */}
-      <section className="w-full pt-10 pb-16 sm:pt-14 sm:pb-20">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-900 via-primary-800 to-surface-950 px-6 py-16 sm:px-10 sm:py-24 lg:px-14">
+      <section className="w-full">
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-900 via-primary-800 to-surface-950 px-6 pb-16 sm:px-10 sm:pb-24 lg:px-14">
           {/* Decorative mesh grid */}
           <div className="absolute inset-0 opacity-[0.07]">
             <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
