@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { isAuthenticated, logout } from '@/lib/auth';
 import { useTheme } from '@/lib/theme-provider';
 
@@ -17,24 +17,21 @@ const appNavItems: NavItem[] = [
 ];
 
 export default function Navbar() {
-  const router = useRouter();
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAuthed, setIsAuthed] = useState(false);
   const [loading, setLoading] = useState(true);
+  const isAuthed = isAuthenticated();
   const { theme: currentTheme, toggleTheme } = useTheme();
 
   useEffect(() => {
-    setIsAuthed(isAuthenticated());
     setLoading(false);
-  }, [pathname]);
+  }, []);
 
   const isActive = (href: string) => pathname === href;
 
   const handleLogout = () => {
     logout();
-    setIsAuthed(false);
-    router.push('/login');
+    window.location.href = '/login';
   };
 
   return (
