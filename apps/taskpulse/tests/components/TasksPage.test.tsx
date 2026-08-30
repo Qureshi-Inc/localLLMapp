@@ -43,10 +43,13 @@ describe('TasksPage Component', () => {
     expect(screen.getByText('Tasks')).toBeInTheDocument();
   });
 
-  it('renders loading spinner initially', () => {
+  it('renders loading spinner initially', async () => {
+    // Block the fetch so the loading state persists long enough to test
+    (global.fetch as jest.Mock).mockImplementationOnce(() => new Promise(() => {}));
     render(<TasksPage />);
-    const spinner = document.querySelector('[class*="animate-spin"]');
-    expect(spinner).toBeInTheDocument();
+    // Wait briefly for React to render, then check
+    const skeleton = document.querySelector('.animate-pulse');
+    expect(skeleton).toBeInTheDocument();
   });
 
   it('renders tasks in table rows', async () => {
@@ -202,11 +205,9 @@ describe('TasksPage Component', () => {
     (global.fetch as jest.Mock).mockImplementationOnce(() =>
       Promise.reject(new Error('Network error'))
     );
-    await act(async () => {
-      render(<TasksPage />);
-    });
+    render(<TasksPage />);
     await waitFor(() => {
-      expect(document.querySelector('main')).toBeInTheDocument();
+      expect(screen.getByText('Tasks')).toBeInTheDocument();
     });
   });
 
