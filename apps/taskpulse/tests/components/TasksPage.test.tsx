@@ -151,4 +151,52 @@ describe('TasksPage Component', () => {
     expect(within(dialog!).getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
     expect(within(dialog!).getByRole('button', { name: 'Delete' })).toBeInTheDocument();
   });
+
+  it('shows error message when API returns non-200 OK', async () => {
+    (global.fetch as jest.Mock).mockImplementationOnce((url: string) => {
+      if (url === '/api/tasks') {
+        return Promise.resolve({
+          ok: false,
+          status: 500,
+          json: () => Promise.resolve({ error: 'Server error' }),
+        } as Response);
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) } as Response);
+    });
+
+    await act(async () => {
+      render(<TasksPage />);
+    });
+
+    await waitFor(() => {
+      const errorElements = document.querySelectorAll('[class*="bg-danger-50"]');
+      expect(errorElements.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('shows loading spinner while fetching tasks', () => {
+    (global.fetch as jest.Mock).mockImplementationOnce(() =>
+      new Promise(() => {})
+    );
+    render(<TasksPage />);
+    expect(document.querySelector('[class*="animate-spin"]')).toBeInTheDocument();
+  });
+
+  it('renders "No tasks yet" when api returns empty array', async () => {
+    (global.fetch as jest.Mock).mockImplementationOnce((url: string) => {
+      if (url === '/api/tasks') {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([]),
+        } as Response);
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) } as Response);
+    });
+
+    await act(async () => {
+      render(<TasksPage />);
+    });
+
+    expect(screen.getByText('No tasks yet')).toBeInTheDocument();
+  });
 });

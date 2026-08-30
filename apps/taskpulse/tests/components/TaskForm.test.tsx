@@ -246,4 +246,79 @@ describe('TaskForm Component', () => {
       });
     });
   });
+
+  it('shows validation error when title is empty', async () => {
+    render(<TaskForm onSubmit={jest.fn()} />);
+
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Some description' } });
+    fireEvent.click(screen.getByRole('button', { name: /create task/i }));
+
+    await waitFor(() => {
+      const errorText = screen.getByText(/title is required/i);
+      expect(errorText).toBeInTheDocument();
+    });
+  });
+
+  it('shows validation error when title is too short', async () => {
+    render(<TaskForm onSubmit={jest.fn()} />);
+
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'A' } });
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Some description' } });
+    fireEvent.click(screen.getByRole('button', { name: /create task/i }));
+
+    await waitFor(() => {
+      const errorText = screen.getByText(/title must be at least/i);
+      expect(errorText).toBeInTheDocument();
+    });
+  });
+
+  it('shows validation error for empty description in edit mode', async () => {
+    render(
+      <TaskForm
+        onSubmit={jest.fn()}
+        initialData={{ title: 'Original', description: 'Original desc', status: 'Todo' }}
+      />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /update task/i })).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'OK' } });
+    fireEvent.click(screen.getByRole('button', { name: /update task/i }));
+  });
+
+  it('accepts valid title with minimum length', async () => {
+    const handleSubmit = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    render(<TaskForm onSubmit={handleSubmit} />);
+
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'AB' } });
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Desc' } });
+    fireEvent.click(screen.getByRole('button', { name: /create task/i }));
+
+    await waitFor(() => {
+      expect(handleSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ title: 'AB' })
+      );
+    });
+  });
+
+  it('renders all required fields in create mode', () => {
+    render(<TaskForm onSubmit={jest.fn()} />);
+    expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/status/i)).toBeInTheDocument();
+  });
+
+  it('renders priority buttons as a group', () => {
+    render(<TaskForm onSubmit={jest.fn()} />);
+    const priorityButtons = screen.getAllByRole('button');
+    const priorityBtnNames = priorityButtons
+      .filter(btn => /low|medium|high|urgent/.test(btn.textContent || ''))
+      .map(btn => btn.textContent?.toLowerCase());
+    expect(priorityBtnNames).toContain('low');
+    expect(priorityBtnNames).toContain('medium');
+    expect(priorityBtnNames).toContain('high');
+    expect(priorityBtnNames).toContain('urgent');
+  });
 });

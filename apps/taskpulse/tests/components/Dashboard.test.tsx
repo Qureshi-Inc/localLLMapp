@@ -262,4 +262,63 @@ describe('Dashboard Component', () => {
       expect(screen.getByText('No tasks yet. Create your first task to get started!')).toBeInTheDocument();
     });
   });
+
+  it('shows error message when fetch fails', async () => {
+    (global.fetch as jest.Mock).mockImplementationOnce(() =>
+      Promise.reject(new Error('Network error'))
+    );
+    render(<DashboardPage />);
+    await waitFor(() => {
+      const errorElements = document.querySelectorAll('[class*="bg-danger-50"]');
+      expect(errorElements.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('completes a task when complete button is clicked', async () => {
+    render(<DashboardPage />);
+    await waitFor(() => {
+      const completeButtons = document.querySelectorAll('[title="Complete"]');
+      expect(completeButtons.length).toBeGreaterThan(0);
+    });
+    const completeButton = document.querySelectorAll('[title="Complete"]')[0];
+    fireEvent.click(completeButton);
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(
+        expect.stringContaining('/api/tasks'),
+        expect.objectContaining({
+          method: 'PATCH',
+        })
+      );
+    });
+  });
+
+  it('renders skeleton loading placeholders', async () => {
+    (global.fetch as jest.Mock).mockImplementationOnce(() =>
+      new Promise(() => {})
+    );
+    render(<DashboardPage />);
+    await waitFor(() => {
+      const skeletons = document.querySelectorAll('[class*="animate-pulse"]');
+      expect(skeletons.length).toBeGreaterThan(0);
+    });
+  });
+
+  it('shows correct completion rate for tasks', async () => {
+    render(<DashboardPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Completion Rate')).toBeInTheDocument();
+    });
+    // 1 out of 3 tasks completed = 33%
+    const allElements = document.querySelectorAll('[class*="text-engineering"] span');
+    const rates = Array.from(allElements).map(el => el.textContent || '');
+    expect(rates.some(r => r?.includes('33'))).toBe(true);
+  });
+
+  it('displays all three stat card progress bars', async () => {
+    render(<DashboardPage />);
+    await waitFor(() => {
+      const allOnes = document.querySelectorAll('[class*="rounded-full"][class*="h-2"]');
+      expect(allOnes.length).toBeGreaterThanOrEqual(3);
+    });
+  });
 });
