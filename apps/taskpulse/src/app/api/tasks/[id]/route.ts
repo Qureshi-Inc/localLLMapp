@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { updateTask, deleteTask } from '@/lib/db';
 
-const ALLOWED_FIELDS = ['title', 'description', 'status', 'priority'];
+const ALLOWED_FIELDS = ['title', 'description', 'status', 'priority', 'dueDate'];
 const VALID_PRIORITIES = ['Low', 'Medium', 'High', 'Urgent'] as const;
 
 export async function PATCH(request: Request, { params }: { params: { id: string } }) {

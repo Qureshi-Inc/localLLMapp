@@ -4,15 +4,15 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import TaskForm from '@/components/TaskForm';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import type { Priority } from '@/lib/priority';
-import { PRIORITY_CONFIG } from '@/lib/priority';
-import { getDueDateStatus, isOverdue, formatDateDisplay } from '@/lib/priority';
+import { PRIORITY_CONFIG, PRIORITY_ORDER, getDueDateStatus, isOverdue, formatDateDisplay } from '@/lib/priority';
+import { ToastProvider, useToast } from '@/components/Toast';
 
 interface Task {
   id: string;
   title: string;
   description: string;
   status: 'Todo' | 'In Progress' | 'Done';
-  priority: Priority;
+  priority: 'Low' | 'Medium' | 'High' | 'Urgent';
   createdAt: string;
   dueDate: string | null;
 }
@@ -42,6 +42,13 @@ const StatusBadge = ({ status }: { status: string }) => {
       {status}
     </span>
   );
+};
+
+const PRIORITY_CONFIG_DISPLAY = {
+  'Low': { dot: 'bg-surface-400', badge: 'bg-surface-100', text: 'text-surface-600' },
+  'Medium': { dot: 'bg-warning-500', badge: 'bg-warning-100', text: 'text-warning-700' },
+  'High': { dot: 'bg-orange-500', badge: 'bg-orange-100', text: 'text-orange-700' },
+  'Urgent': { dot: 'bg-red-500', badge: 'bg-red-100', text: 'text-red-700' },
 };
 
 const SkeletonTableRows = () => (
@@ -81,15 +88,23 @@ const NotFoundState = () => (
   </div>
 );
 
-function debounce(fn: (...args: string[]) => void, delay: number) {
-  let timer: ReturnType<typeof setTimeout>;
-  return (...args: string[]) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => fn(...args), delay);
-  };
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return '—';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export default function TasksPage() {
+function isDueSoon(dateStr?: string): boolean {
+  if (!dateStr) return false;
+  const due = new Date(dateStr);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diff = (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+  return diff > 0 && diff <= 3;
+}
+
+function TasksPageContent() {
+  const { addToast } = useToast();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -112,8 +127,10 @@ export default function TasksPage() {
       if (!res.ok) throw new Error('Failed to fetch tasks');
       const data = await res.json();
       setTasks(data);
+      setCurrentPage(1);
     } catch {
       console.error('Failed to fetch tasks');
+      addToast('Failed to load tasks', 'error');
     } finally {
       setLoading(false);
     }
@@ -128,12 +145,14 @@ export default function TasksPage() {
       const res = await fetch('/api/tasks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(task),
+        body: JSON.stringify({ title: task.title, description: task.description, status: task.status, priority: task.priority, dueDate: task.dueDate }),
       });
       if (!res.ok) throw new Error('Failed to create task');
       await fetchTasks();
+      addToast('Task created successfully', 'success');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create task');
+      addToast(err instanceof Error ? err.message : 'Failed to create task', 'error');
     }
   };
 
@@ -143,13 +162,15 @@ export default function TasksPage() {
       const res = await fetch(`/api/tasks/${editingTask.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(task),
+        body: JSON.stringify({ title: task.title, description: task.description, status: task.status, priority: task.priority, dueDate: task.dueDate }),
       });
       if (!res.ok) throw new Error('Failed to update task');
       setEditingTask(null);
       await fetchTasks();
+      addToast('Task updated successfully', 'success');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update task');
+      addToast(err instanceof Error ? err.message : 'Failed to update task', 'error');
     }
   };
 
@@ -158,8 +179,10 @@ export default function TasksPage() {
       const res = await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Failed to delete task');
       setTasks(prev => prev.filter(t => t.id !== id));
+      addToast('Task deleted', 'info');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete task');
+      addToast(err instanceof Error ? err.message : 'Failed to delete task', 'error');
     }
   };
 
@@ -173,8 +196,10 @@ export default function TasksPage() {
         setEditingTask(null);
       }
       setDeleteDialog({ isOpen: false, taskId: null, taskTitle: '' });
+      addToast('Task deleted', 'info');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete task');
+      addToast(err instanceof Error ? err.message : 'Failed to delete task', 'error');
     }
   };
 
@@ -194,6 +219,7 @@ export default function TasksPage() {
       setTasks(prev => prev.map(t => t.id === id ? { ...t, status: newStatus } : t));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update task status');
+      addToast(err instanceof Error ? err.message : 'Failed to update status', 'error');
     }
   };
 
@@ -203,9 +229,13 @@ export default function TasksPage() {
     setDueDateFilter('all');
   }, []);
 
-  const debouncedSearch = useCallback(debounce((value: string) => {
-    setSearch(value);
-  }, 300), []);
+  const debouncedSearch = useCallback((function () {
+    let timer: ReturnType<typeof setTimeout>;
+    return (value: string) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => setSearch(value), 300);
+    };
+  })(), []);
 
   const filteredTasks = [...tasks].filter(task => {
     const matchesStatus = statusFilter === 'All' || task.status === statusFilter;
@@ -245,7 +275,9 @@ export default function TasksPage() {
   };
 
   const hasActiveFilters = search.length > 0 || statusFilter !== 'All' || dueDateFilter !== 'all';
-  const searchAndStatusFilters = search.length > 0 || statusFilter !== 'All';
+  const currentPageData = sortedTasks.length > 0
+    ? `${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, sortedTasks.length)} of ${sortedTasks.length}`
+    : '';
 
   if (loading) {
     return (
@@ -262,6 +294,9 @@ export default function TasksPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-surface-900">Tasks</h1>
+        {filteredTasks.length > 0 && (
+          <span className="text-sm text-muted">{currentPageData}</span>
+        )}
       </div>
 
       {error && (
@@ -374,14 +409,29 @@ export default function TasksPage() {
                   >
                     <td className="py-3.5 px-4">
                       <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
-                        PRIORITY_CONFIG[task.priority as Priority]?.badge || PRIORITY_CONFIG['Medium'].badge
-                      } ${PRIORITY_CONFIG[task.priority as Priority]?.text || PRIORITY_CONFIG['Medium'].text}`}
+                        PRIORITY_CONFIG_DISPLAY[task.priority as keyof typeof PRIORITY_CONFIG_DISPLAY]?.badge || PRIORITY_CONFIG_DISPLAY['Medium'].badge
+                      } ${PRIORITY_CONFIG_DISPLAY[task.priority as keyof typeof PRIORITY_CONFIG_DISPLAY]?.text || PRIORITY_CONFIG_DISPLAY['Medium'].text}`}
                       >
                         <span className={`w-1.5 h-1.5 rounded-full ${
-                          PRIORITY_CONFIG[task.priority as Priority]?.dot || PRIORITY_CONFIG['Medium'].dot
+                          PRIORITY_CONFIG_DISPLAY[task.priority as keyof typeof PRIORITY_CONFIG_DISPLAY]?.dot || PRIORITY_CONFIG_DISPLAY['Medium'].dot
                         }`} />
                         {task.priority}
                       </span>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      {task.dueDate ? (
+                        <span className={`text-sm ${
+                          isOverdue(task.dueDate) ? 'text-danger-600 font-medium' :
+                          isDueSoon(task.dueDate) ? 'text-warning-600 font-medium' :
+                          'text-surface-600'
+                        }`}>
+                          {isOverdue(task.dueDate) && <span className="mr-0.5">⚠</span>}
+                          {isDueSoon(task.dueDate) && !isOverdue(task.dueDate) && <span className="mr-0.5">⏰</span>}
+                          {formatDate(task.dueDate)}
+                        </span>
+                      ) : (
+                        <span className="text-muted text-sm">—</span>
+                      )}
                     </td>
                     <td className="py-3.5 px-4">
                       <div className="min-w-0">
@@ -492,8 +542,9 @@ export default function TasksPage() {
         )}
       </div>
 
-      {sortedTasks.length > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-surface-900 rounded-xl border border-surface-200 dark:border-surface-700 shadow-sm p-4">
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white dark:bg-surface-900 rounded-xl border border-surface-200 dark:border-surface-700 shadow-sm px-4 py-3">
           <div className="flex items-center gap-2 text-sm text-muted dark:text-surface-400">
             <span>Showing</span>
             <select
@@ -591,5 +642,13 @@ export default function TasksPage() {
         cancelLabel="Cancel"
       />
     </div>
+  );
+}
+
+export default function TasksPage() {
+  return (
+    <ToastProvider>
+      <TasksPageContent />
+    </ToastProvider>
   );
 }
