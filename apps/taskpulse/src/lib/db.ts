@@ -7,7 +7,7 @@ import path from 'path';
 import type { Task } from './priority';
 
 export type { Priority, Task } from './priority';
-export { PRIORITY_ORDER, PRIORITY_CONFIG, getPriorityOrder, sortTasksByPriority } from './priority';
+export { PRIORITY_ORDER, PRIORITY_CONFIG, getPriorityOrder, sortTasksByPriority, isOverdue, getDueDateStatus, formatDateDisplay } from './priority';
 
 const DB_PATH = path.join(process.cwd(), 'data', 'tasks.json');
 
