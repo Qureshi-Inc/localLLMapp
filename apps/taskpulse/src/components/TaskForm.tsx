@@ -1,15 +1,9 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import type { Priority, PRIORITY_CONFIG as PRIORITY_CONFIG_TYPE } from '@/lib/priority';
+import type { Priority } from '@/lib/priority';
 
 export type { Priority } from '@/lib/priority';
-const PRIORITY_CONFIG = {
-  'Low': { active: 'bg-surface-200 text-surface-900 ring-surface-400/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-surface-400' },
-  'Medium': { active: 'bg-warning-100 text-warning-800 ring-warning-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-yellow-500' },
-  'High': { active: 'bg-orange-100 text-orange-800 ring-orange-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-orange-500' },
-  'Urgent': { active: 'bg-red-100 text-red-800 ring-red-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-red-500' },
-} as Record<string, { active: string; inactive: string; dot: string }>;
 
 interface TaskFormProps {
   onSubmit: (task: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done'; priority: Priority; dueDate: string | null }) => void | Promise<void>;
@@ -20,7 +14,15 @@ interface TaskFormProps {
 interface FieldError {
   title?: string;
   description?: string;
+  dueDate?: string;
 }
+
+const PRIORITY_CONFIG_NEW: Record<Priority, { active: string; inactive: string; dot: string }> = {
+  'Low': { active: 'bg-surface-200 text-surface-900 ring-surface-400/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-surface-400' },
+  'Medium': { active: 'bg-warning-100 text-warning-800 ring-warning-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-yellow-500' },
+  'High': { active: 'bg-orange-100 text-orange-800 ring-orange-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-orange-500' },
+  'Urgent': { active: 'bg-red-100 text-red-800 ring-red-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-red-500' },
+};
 
 export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormProps) {
   const [title, setTitle] = useState(initialData?.title || '');
@@ -46,14 +48,14 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
   useEffect(() => {
     if (isSuccess) {
       const timer = setTimeout(() => {
-      setIsSuccess(false);
-      if (!initialData) {
-        setTitle('');
-        setDescription('');
-        setStatus('Todo');
-        setPriority('Medium');
-        setDueDate(null);
-      }
+        setIsSuccess(false);
+        if (!initialData) {
+          setTitle('');
+          setDescription('');
+          setStatus('Todo');
+          setPriority('Medium');
+          setDueDate(null);
+        }
       }, 2500);
       return () => clearTimeout(timer);
     }
@@ -69,6 +71,9 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
     if (!description.trim()) {
       newErrors.description = 'Description is required';
     }
+    if (dueDate && new Date(dueDate) < new Date(new Date().toDateString())) {
+      newErrors.dueDate = 'Due date cannot be in the past';
+    }
     return newErrors;
   };
 
@@ -79,7 +84,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setTouched({ title: true, description: true });
+    setTouched({ title: true, description: true, dueDate: true });
     const validationErrors = validate();
     setErrors(validationErrors);
     if (Object.keys(validationErrors).length > 0) return;
@@ -93,6 +98,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
         setTitle('');
         setDescription('');
         setStatus('Todo');
+        setPriority('Medium');
         setDueDate(null);
       }
     } finally {
@@ -113,6 +119,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
   const hasErrors = Object.keys(errors).length > 0 && Object.keys(touched).length > 0;
   const titleError = touched.title ? errors.title : undefined;
   const descError = touched.description ? errors.description : undefined;
+  const dueDateError = touched.dueDate ? errors.dueDate : undefined;
 
   return (
     <div className="space-y-4 animate-in animate-fade-in">
@@ -235,25 +242,55 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
           </div>
         </div>
 
-        <div className="space-y-2">
-          <label htmlFor="task-status" className="block text-xs font-medium text-surface-500 uppercase tracking-wide">
-            Status
-          </label>
-          <div className="relative">
-            <select
-              id="task-status"
-              value={status}
-              onChange={(e) => setStatus(e.target.value as 'Todo' | 'In Progress' | 'Done')}
-              className="w-full appearance-none bg-surface-50 border border-input rounded-lg px-4 py-2.5 text-sm text-surface-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors disabled:opacity-50 cursor-pointer"
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label htmlFor="task-status" className="block text-xs font-medium text-surface-500 uppercase tracking-wide">
+              Status
+            </label>
+            <div className="relative">
+              <select
+                id="task-status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value as 'Todo' | 'In Progress' | 'Done')}
+                className="w-full appearance-none bg-surface-50 border border-input rounded-lg px-4 py-2.5 text-sm text-surface-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors disabled:opacity-50 cursor-pointer"
+                disabled={isSubmitting}
+              >
+                <option value="Todo">Todo</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Done">Done</option>
+              </select>
+              <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="task-due-date" className="block text-xs font-medium text-surface-500 uppercase tracking-wide">
+              Due Date
+            </label>
+            <input
+              id="task-due-date"
+              type="date"
+              value={dueDate || ''}
+              onChange={(e) => {
+                setDueDate(e.target.value);
+                if (touched.dueDate) setErrors(validate());
+              }}
+              onBlur={() => handleBlur('dueDate')}
+              className="w-full bg-surface-50 border border-input rounded-lg px-4 py-2.5 text-sm text-surface-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors disabled:opacity-50"
               disabled={isSubmitting}
-            >
-              <option value="Todo">Todo</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Done">Done</option>
-            </select>
-            <svg className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-surface-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-            </svg>
+              aria-invalid={!!dueDateError}
+              aria-describedby={dueDateError ? 'due-date-error' : undefined}
+            />
+            {dueDateError && (
+              <p id="due-date-error" className="mt-1.5 text-xs text-danger-600 flex items-center gap-1">
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                {dueDateError}
+              </p>
+            )}
           </div>
         </div>
 
@@ -263,14 +300,8 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
           </label>
           <div className="flex items-center gap-2 flex-wrap">
             {(['Low', 'Medium', 'High', 'Urgent'] as Priority[]).map((p) => {
-              const config = {
-                'Low': { active: 'bg-surface-200 text-surface-900 ring-surface-400/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-surface-400' },
-                'Medium': { active: 'bg-warning-100 text-warning-800 ring-warning-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-yellow-500' },
-                'High': { active: 'bg-orange-100 text-orange-800 ring-orange-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-orange-500' },
-                'Urgent': { active: 'bg-red-100 text-red-800 ring-red-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-red-500' },
-              } as Record<string, { active: string; inactive: string; dot: string }>;
+              const config = PRIORITY_CONFIG_NEW[p];
               const isActive = priority === p;
-              const style = config[p];
               return (
                 <button
                   key={p}
@@ -278,39 +309,15 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
                   onClick={() => setPriority(p)}
                   disabled={isSubmitting}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ring-1 ring-inset transition-all disabled:opacity-50 ${
-                    isActive ? style.active : style.inactive
+                    isActive ? config.active : config.inactive
                   }`}
                 >
-                  <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
+                  <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`} />
                   {p}
                 </button>
               );
             })}
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <label htmlFor="task-due-date" className="block text-xs font-medium text-surface-500 uppercase tracking-wide">
-            Due Date (optional)
-          </label>
-          <input
-            id="task-due-date"
-            type="date"
-            value={dueDate || ''}
-            onChange={(e) => setDueDate(e.target.value || null)}
-            className="w-full appearance-none bg-surface-50 border border-input rounded-lg px-4 py-2.5 text-sm text-surface-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors disabled:opacity-50 cursor-pointer dark:bg-surface-800 dark:border-surface-700 dark:text-surface-100"
-            disabled={isSubmitting}
-          />
-          {dueDate && (
-            <button
-              type="button"
-              onClick={() => setDueDate(null)}
-              className="text-xs text-muted hover:text-danger-600 transition-colors"
-              disabled={isSubmitting}
-            >
-              Clear due date
-            </button>
-          )}
         </div>
 
         <div className="flex items-center gap-3 pt-2">

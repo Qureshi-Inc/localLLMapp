@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import type { Priority } from '@/lib/priority';
-import { PRIORITY_CONFIG, isOverdue, formatDateDisplay } from '@/lib/priority';
+import { PRIORITY_CONFIG, PRIORITY_ORDER, isOverdue, formatDateDisplay } from '@/lib/priority';
+import { ToastProvider, useToast } from '@/components/Toast';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
 interface Task {
@@ -11,7 +12,7 @@ interface Task {
   title: string;
   description: string;
   status: 'Todo' | 'In Progress' | 'Done';
-  priority: Priority;
+  priority: 'Low' | 'Medium' | 'High' | 'Urgent';
   createdAt: string;
   dueDate: string | null;
 }
@@ -20,6 +21,13 @@ const STATUS_CYCLE: Record<string, string> = {
   'Todo': 'In Progress',
   'In Progress': 'Done',
   'Done': 'Todo',
+};
+
+const PRIORITY_CONFIG_DISPLAY = {
+  'Low': { dot: 'bg-surface-400', badge: 'bg-surface-100', text: 'text-surface-600' },
+  'Medium': { dot: 'bg-warning-500', badge: 'bg-warning-100', text: 'text-warning-700' },
+  'High': { dot: 'bg-orange-500', badge: 'bg-orange-100', text: 'text-orange-700' },
+  'Urgent': { dot: 'bg-red-500', badge: 'bg-red-100', text: 'text-red-700' },
 };
 
 const statusConfig: Record<string, { color: string; bg: string; bgHover: string; icon: React.ReactNode }> = {
@@ -240,37 +248,14 @@ function DonutChart({ tasks }: { tasks: Task[] }) {
   );
 }
 
-function ActivityItem({ task }: { task: Task }) {
-  const statusBadge = (status: string) => {
-    switch (status) {
-      case 'Done':
-        return 'bg-success-100 text-success-700';
-      case 'In Progress':
-        return 'bg-warning-100 text-warning-700';
-      default:
-        return 'bg-surface-100 text-surface-700';
-    }
-  };
-
-  return (
-    <div className="flex items-center gap-4 py-3 first:pt-0 last:pb-0">
-      <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
-        task.status === 'Done' ? 'bg-success-500' :
-        task.status === 'In Progress' ? 'bg-warning-500' :
-        'bg-surface-400'
-      }`} />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-surface-900 truncate">{task.title}</p>
-        <p className="text-xs text-muted truncate">{task.description}</p>
-      </div>
-      <span className={`hidden sm:inline-block text-xs px-2.5 py-1 rounded-full font-medium flex-shrink-0 ${statusBadge(task.status)}`}>
-        {task.status}
-      </span>
-    </div>
-  );
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return '—';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export default function DashboardPage() {
+function DashboardPageContent() {
+  const { addToast } = useToast();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -289,6 +274,7 @@ export default function DashboardPage() {
         setTasks(data);
       } catch {
         console.error('Failed to fetch tasks');
+        addToast('Failed to load tasks', 'error');
       } finally {
         setLoading(false);
       }
@@ -312,8 +298,10 @@ export default function DashboardPage() {
       if (!res.ok) throw new Error('Failed to delete task');
       setTasks(prev => prev.filter(t => t.id !== deleteDialog.taskId));
       setDeleteDialog({ isOpen: false, taskId: null, taskTitle: '' });
+      addToast('Task deleted', 'info');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to delete task');
+      addToast(err instanceof Error ? err.message : 'Failed to delete task', 'error');
     }
   };
 
@@ -333,6 +321,7 @@ export default function DashboardPage() {
       setTasks(prev => prev.map(t => t.id === id ? { ...t, status: newStatus } : t));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update task status');
+      addToast(err instanceof Error ? err.message : 'Failed to update status', 'error');
     }
   };
 
@@ -377,9 +366,12 @@ export default function DashboardPage() {
     );
   }
 
-  const recentTasks = [...tasks].sort((a, b) =>
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  ).slice(0, 5);
+  const recentTasks = [...tasks].sort((a, b) => {
+    const pa = PRIORITY_ORDER[(a.priority as 'Low' | 'Medium' | 'High' | 'Urgent')] ?? 2;
+    const pb = PRIORITY_ORDER[(b.priority as 'Low' | 'Medium' | 'High' | 'Urgent')] ?? 2;
+    if (pa !== pb) return pa - pb;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  }).slice(0, 5);
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -491,7 +483,7 @@ export default function DashboardPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
-                          PRIORITY_CONFIG[task.priority as Priority]?.dot || 'bg-yellow-500'
+                          PRIORITY_CONFIG_DISPLAY[(task.priority as keyof typeof PRIORITY_CONFIG_DISPLAY)]?.dot || 'bg-yellow-500'
                         }`} title={`Priority: ${task.priority}`} />
                         <p className="text-sm font-medium text-surface-900 group-hover:text-primary transition-colors truncate">
                           {task.title}
@@ -507,6 +499,14 @@ export default function DashboardPage() {
                         )}
                       </div>
                       <p className="text-xs text-muted dark:text-surface-500 truncate">{task.description}</p>
+                      {task.dueDate && (
+                        <p className={`text-xs mt-0.5 ${
+                          isOverdue(task.dueDate) ? 'text-danger-600 dark:text-danger-400' :
+                          'text-muted dark:text-surface-500'
+                        }`}>
+                          Due: {formatDate(task.dueDate)}{isOverdue(task.dueDate) ? ' ⚠' : ''}
+                        </p>
+                      )}
                     </div>
                     <div className="hidden sm:flex items-center gap-2">
                       <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
@@ -595,5 +595,13 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <ToastProvider>
+      <DashboardPageContent />
+    </ToastProvider>
   );
 }
