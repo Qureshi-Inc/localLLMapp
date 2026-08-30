@@ -107,29 +107,46 @@ function TasksPageContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isPageLoading, setIsPageLoading] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
   const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; taskId: string | null; taskTitle: string }>({
     isOpen: false,
     taskId: null,
     taskTitle: '',
   });
 
-  const fetchTasks = async () => {
+  const fetchTasks = async (page: number = 1) => {
+    setIsPageLoading(true);
     try {
-      const res = await fetch('/api/tasks');
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(pageSize),
+      });
+      if (statusFilter !== 'All') params.set('status', statusFilter);
+      if (dueDateFilter !== 'all') params.set('dueDate', dueDateFilter);
+      if (search) params.set('search', search);
+      params.set('sortBy', 'dueDate');
+      params.set('sortOrder', 'desc');
+
+      const res = await fetch(`/api/tasks?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch tasks');
       const data = await res.json();
-      setTasks(data);
-      setCurrentPage(1);
+      setTasks(data.tasks || []);
+      setTotalPages(data.pagination?.totalPages || 1);
+      setTotalItems(data.pagination?.totalItems || 0);
+      setCurrentPage(data.pagination?.currentPage || page);
+      setError(null);
     } catch {
       console.error('Failed to fetch tasks');
       addToast('Failed to load tasks', 'error');
     } finally {
+      setIsPageLoading(false);
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchTasks();
+    fetchTasks(1);
   }, []);
 
   const handleCreate = async (task: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done'; priority: Priority; dueDate: string | null }) => {
@@ -225,51 +242,28 @@ function TasksPageContent() {
     let timer: ReturnType<typeof setTimeout>;
     return (value: string) => {
       clearTimeout(timer);
-      timer = setTimeout(() => setSearch(value), 300);
+      timer = setTimeout(() => {
+        setSearch(value);
+        fetchTasks(1);
+      }, 500);
     };
   })(), []);
 
-  const filteredTasks = [...tasks].filter(task => {
-    const matchesStatus = statusFilter === 'All' || task.status === statusFilter;
-    const matchesDueDate = dueDateFilter === 'all' ||
-      (dueDateFilter === 'overdue' && isOverdue(task.dueDate)) ||
-      (dueDateFilter === 'no-date' && !task.dueDate);
-    const searchLower = search.toLowerCase();
-    const matchesSearch = !search ||
-      task.title.toLowerCase().includes(searchLower) ||
-      task.description.toLowerCase().includes(searchLower);
-    return matchesStatus && matchesDueDate && matchesSearch;
-  });
-
-  const sortedTasks = [...filteredTasks].sort((a, b) => {
-    const aOverdue = isOverdue(a.dueDate) ? 1 : 0;
-    const bOverdue = isOverdue(b.dueDate) ? 1 : 0;
-    if (bOverdue !== aOverdue) return bOverdue - aOverdue;
-    if (!a.dueDate && !b.dueDate) return 0;
-    if (!a.dueDate) return 1;
-    if (!b.dueDate) return -1;
-    return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-  });
-
-  const totalPages = sortedTasks.length > 0 ? Math.ceil(sortedTasks.length / pageSize) : 1;
-  const paginatedTasks = sortedTasks.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  useEffect(() => {
+    fetchTasks(1);
+  }, [statusFilter, dueDateFilter, pageSize]);
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
-    setIsPageLoading(true);
-    setCurrentPage(page);
-    setTimeout(() => setIsPageLoading(false), 200);
+    fetchTasks(page);
   };
 
   const handlePageSizeChange = (newSize: number) => {
     setPageSize(newSize);
-    setCurrentPage(1);
+    fetchTasks(1);
   };
 
   const hasActiveFilters = search.length > 0 || statusFilter !== 'All' || dueDateFilter !== 'all';
-  const currentPageData = sortedTasks.length > 0
-    ? `${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, sortedTasks.length)} of ${sortedTasks.length}`
-    : '';
 
   if (loading) {
     return (
@@ -286,8 +280,8 @@ function TasksPageContent() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-surface-900">Tasks</h1>
-        {filteredTasks.length > 0 && (
-          <span className="text-sm text-muted">{currentPageData}</span>
+        {totalItems > 0 && (
+          <span className="text-sm text-muted dark:text-surface-400">{totalItems} tasks</span>
         )}
       </div>
 
@@ -366,8 +360,10 @@ function TasksPageContent() {
       </div>
 
       <div className="bg-white rounded-xl border border-surface-200 shadow-sm overflow-hidden">
-        {filteredTasks.length === 0 ? (
-          tasks.length === 0 ? <EmptyState /> : <NotFoundState />
+        {tasks.length === 0 && totalItems === 0 ? (
+          <EmptyState />
+        ) : tasks.length === 0 ? (
+          <NotFoundState />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -394,7 +390,7 @@ function TasksPageContent() {
                 </tr>
               </thead>
               <tbody className={`divide-y divide-surface-100 dark:divide-surface-700 ${isPageLoading ? 'animate-pulse' : ''}`}>
-                {paginatedTasks.map((task) => (
+                {tasks.map((task) => (
                   <tr
                     key={task.id}
                     className="group transition-colors hover:bg-primary-50/50 dark:hover:bg-primary-900/20"
@@ -411,24 +407,20 @@ function TasksPageContent() {
                       </span>
                     </td>
                     <td className="py-3.5 px-4">
-                      {task.dueDate ? (
-                        <span className={`text-sm ${
-                          isOverdue(task.dueDate) ? 'text-danger-600 font-medium' :
-                          isDueSoon(task.dueDate) ? 'text-warning-600 font-medium' :
-                          'text-surface-600'
-                        }`}>
-                          {isOverdue(task.dueDate) && <span className="mr-0.5">⚠</span>}
-                          {isDueSoon(task.dueDate) && !isOverdue(task.dueDate) && <span className="mr-0.5">⏰</span>}
-                          {formatDate(task.dueDate)}
-                        </span>
-                      ) : (
-                        <span className="text-muted text-sm">—</span>
-                      )}
-                    </td>
-                    <td className="py-3.5 px-4">
                       <div className="min-w-0">
                         <p className="font-medium text-surface-900 dark:text-surface-100 truncate">{task.title}</p>
                         <p className="text-muted text-xs mt-0.5 truncate max-w-md dark:text-surface-500">{task.description}</p>
+                        {task.dueDate && (
+                          <p className={`text-xs mt-1 ${
+                            isOverdue(task.dueDate) ? 'text-danger-600 dark:text-danger-400' :
+                            isDueSoon(task.dueDate) ? 'text-warning-600 dark:text-warning-400' :
+                            'text-muted dark:text-surface-500'
+                          }`}>
+                            {isOverdue(task.dueDate) && '⚠ '}
+                            {isDueSoon(task.dueDate) && !isOverdue(task.dueDate) && '⏰ '}
+                            {formatDate(task.dueDate)}
+                          </p>
+                        )}
                       </div>
                     </td>
                     <td className="py-3.5 px-4">
@@ -549,7 +541,7 @@ function TasksPageContent() {
               <option value={25}>25</option>
               <option value={50}>50</option>
             </select>
-            <span>of {sortedTasks.length} tasks</span>
+            <span>per page · {totalItems} total</span>
           </div>
           <div className="flex items-center gap-1">
             <button

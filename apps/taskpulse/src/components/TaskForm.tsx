@@ -17,11 +17,11 @@ interface FieldError {
   dueDate?: string;
 }
 
-const PRIORITY_CONFIG_NEW: Record<Priority, { active: string; inactive: string; dot: string }> = {
-  'Low': { active: 'bg-surface-200 text-surface-900 ring-surface-400/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-surface-400' },
-  'Medium': { active: 'bg-warning-100 text-warning-800 ring-warning-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-yellow-500' },
-  'High': { active: 'bg-orange-100 text-orange-800 ring-orange-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-orange-500' },
-  'Urgent': { active: 'bg-red-100 text-red-800 ring-red-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-red-500' },
+  const PRIORITY_CONFIG_NEW: Record<Priority, { active: string; inactive: string; dot: string }> = {
+  'Low': { active: 'bg-surface-200 dark:bg-surface-600 text-surface-900 dark:text-surface-100 ring-surface-400/30', inactive: 'bg-surface-50 dark:bg-surface-800 text-surface-600 dark:text-surface-400 ring-surface-300/50', dot: 'bg-surface-400' },
+  'Medium': { active: 'bg-warning-100 text-warning-800 dark:bg-warning-900/50 dark:text-warning-200 ring-warning-500/30', inactive: 'bg-surface-50 dark:bg-surface-800 text-surface-600 dark:text-surface-400 ring-surface-300/50', dot: 'bg-yellow-500' },
+  'High': { active: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-200 ring-orange-500/30', inactive: 'bg-surface-50 dark:bg-surface-800 text-surface-600 dark:text-surface-400 ring-surface-300/50', dot: 'bg-orange-500' },
+  'Urgent': { active: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200 ring-red-500/30', inactive: 'bg-surface-50 dark:bg-surface-800 text-surface-600 dark:text-surface-400 ring-surface-300/50', dot: 'bg-red-500' },
 };
 
 export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormProps) {
@@ -148,9 +148,9 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border border-surface-200 space-y-5">
+      <form onSubmit={handleSubmit} className="bg-white dark:bg-surface-900 p-6 rounded-xl shadow-sm border border-surface-200 dark:border-surface-700 space-y-5">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-surface-900">
+          <h3 className="text-lg font-semibold text-surface-900 dark:text-surface-100">
             {initialData ? 'Edit Task' : 'Create New Task'}
           </h3>
           <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
@@ -167,12 +167,12 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
             className={`transition-colors duration-200 rounded-lg border px-4 py-3 ${
               titleError
                 ? 'bg-danger-50 border-danger-300'
-                : 'bg-surface-50 border-input focus-within:border-primary focus-within:ring-1 focus-within:ring-primary'
+                : 'bg-surface-50 dark:bg-surface-800 border-input dark:border-surface-700 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary'
             }`}
           >
             <label
               htmlFor="task-title"
-              className="block text-xs font-medium text-surface-500 uppercase tracking-wide mb-1"
+              className="block text-xs font-medium text-surface-500 dark:text-surface-400 uppercase tracking-wide mb-1"
             >
               Title
             </label>
@@ -185,7 +185,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
                 if (touched.title) setErrors(validate());
               }}
               onBlur={() => handleBlur('title')}
-              className="w-full bg-transparent text-surface-900 placeholder-surface-400 outline-none text-sm disabled:opacity-50"
+              className="w-full bg-transparent text-surface-900 dark:text-surface-100 placeholder-surface-400 dark:placeholder-surface-500 outline-none text-sm disabled:opacity-50"
               placeholder="Enter task title..."
               required
               disabled={isSubmitting}
@@ -211,7 +211,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
           >
             <label
               htmlFor="task-description"
-              className="block text-xs font-medium text-surface-500 uppercase tracking-wide mb-1"
+              className="block text-xs font-medium text-surface-500 dark:text-surface-400 uppercase tracking-wide mb-1"
             >
               Description
             </label>
@@ -223,7 +223,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
                 if (touched.description) setErrors(validate());
               }}
               onBlur={() => handleBlur('description')}
-              className="w-full bg-transparent text-surface-900 placeholder-surface-400 outline-none text-sm resize-none disabled:opacity-50"
+              className="w-full bg-transparent text-surface-900 dark:text-surface-100 placeholder-surface-400 dark:placeholder-surface-500 outline-none text-sm resize-none disabled:opacity-50"
               placeholder="Describe the task..."
               rows={3}
               required
@@ -244,7 +244,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <label htmlFor="task-status" className="block text-xs font-medium text-surface-500 uppercase tracking-wide">
+            <label htmlFor="task-status" className="block text-xs font-medium text-surface-500 dark:text-surface-400 uppercase tracking-wide">
               Status
             </label>
             <div className="relative">
@@ -252,7 +252,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
                 id="task-status"
                 value={status}
                 onChange={(e) => setStatus(e.target.value as 'Todo' | 'In Progress' | 'Done')}
-                className="w-full appearance-none bg-surface-50 border border-input rounded-lg px-4 py-2.5 text-sm text-surface-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors disabled:opacity-50 cursor-pointer"
+                className="w-full appearance-none bg-surface-50 dark:bg-surface-800 border border-input dark:border-surface-700 rounded-lg px-4 py-2.5 text-sm text-surface-900 dark:text-surface-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors disabled:opacity-50 cursor-pointer"
                 disabled={isSubmitting}
               >
                 <option value="Todo">Todo</option>
@@ -266,7 +266,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="task-due-date" className="block text-xs font-medium text-surface-500 uppercase tracking-wide">
+            <label htmlFor="task-due-date" className="block text-xs font-medium text-surface-500 dark:text-surface-400 uppercase tracking-wide">
               Due Date
             </label>
             <input
@@ -278,7 +278,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
                 if (touched.dueDate) setErrors(validate());
               }}
               onBlur={() => handleBlur('dueDate')}
-              className="w-full bg-surface-50 border border-input rounded-lg px-4 py-2.5 text-sm text-surface-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors disabled:opacity-50"
+              className="w-full bg-surface-50 dark:bg-surface-800 border border-input dark:border-surface-700 rounded-lg px-4 py-2.5 text-sm text-surface-900 dark:text-surface-100 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors disabled:opacity-50"
               disabled={isSubmitting}
               aria-invalid={!!dueDateError}
               aria-describedby={dueDateError ? 'due-date-error' : undefined}
@@ -295,7 +295,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="task-priority" className="block text-xs font-medium text-surface-500 uppercase tracking-wide">
+          <label htmlFor="task-priority" className="block text-xs font-medium text-surface-500 dark:text-surface-400 uppercase tracking-wide">
             Priority
           </label>
           <div className="flex items-center gap-2 flex-wrap">
@@ -347,7 +347,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
             type="button"
             onClick={handleReset}
             disabled={isSubmitting}
-            className="inline-flex items-center justify-center px-4 py-2.5 bg-surface-100 text-surface-700 text-sm font-medium rounded-lg hover:bg-surface-200 focus:outline-none focus:ring-2 focus:ring-surface-300 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center justify-center px-4 py-2.5 bg-surface-100 dark:bg-surface-800 text-surface-700 dark:text-surface-300 text-sm font-medium rounded-lg hover:bg-surface-200 dark:hover:bg-surface-700 focus:outline-none focus:ring-2 focus:ring-surface-300 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Reset
           </button>
@@ -356,7 +356,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
               type="button"
               onClick={onCancel}
               disabled={isSubmitting}
-              className="inline-flex items-center justify-center px-4 py-2.5 bg-transparent text-surface-600 text-sm font-medium rounded-lg hover:bg-surface-50 focus:outline-none focus:ring-2 focus:ring-surface-300 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center px-4 py-2.5 bg-transparent text-surface-600 dark:text-surface-400 text-sm font-medium rounded-lg hover:bg-surface-50 dark:hover:bg-surface-800 focus:outline-none focus:ring-2 focus:ring-surface-300 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>

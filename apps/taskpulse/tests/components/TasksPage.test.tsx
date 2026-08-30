@@ -25,10 +25,15 @@ global.fetch = jest.fn();
 beforeEach(() => {
   jest.clearAllMocks();
   (global.fetch as jest.Mock).mockImplementation((url: string) => {
-    if (url === '/api/tasks') {
+    // Handle both old exact URL and new query-param URL
+    const isTasksUrl = url === '/api/tasks' || url.startsWith('/api/tasks?');
+    if (isTasksUrl) {
       return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve(mockTasks),
+        json: () => Promise.resolve({
+          tasks: mockTasks,
+          pagination: { currentPage: 1, pageSize: 10, totalItems: mockTasks.length, totalPages: 1 },
+        }),
       } as Response);
     }
     return Promise.resolve({ ok: true, json: () => Promise.resolve({}) } as Response);
@@ -105,11 +110,12 @@ describe('TasksPage Component', () => {
   });
 
   it('shows empty state when no tasks', async () => {
-    (global.fetch as jest.Mock).mockImplementationOnce((url: string) => {
-      if (url === '/api/tasks') {
+    (global.fetch as jest.Mock).mockImplementation((url: string) => {
+      const isTasksUrl = url === '/api/tasks' || url.startsWith('/api/tasks?');
+      if (isTasksUrl) {
         return Promise.resolve({
           ok: true,
-          json: () => Promise.resolve([]),
+          json: () => Promise.resolve({ tasks: [], pagination: { currentPage: 1, pageSize: 10, totalItems: 0, totalPages: 0 } }),
         } as Response);
       }
       return Promise.resolve({ ok: true, json: () => Promise.resolve({}) } as Response);
@@ -179,7 +185,13 @@ describe('TasksPage Component', () => {
     }));
     (global.fetch as jest.Mock).mockImplementation((url: string) => {
       if (url.toString().includes('/api/tasks')) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve(manyTasks) });
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            tasks: manyTasks,
+            pagination: { currentPage: 1, pageSize: 10, totalItems: manyTasks.length, totalPages: 2 },
+          }),
+        });
       }
       return Promise.reject(new Error('Unknown URL'));
     });
@@ -223,14 +235,20 @@ describe('TasksPage Component', () => {
     }));
     (global.fetch as jest.Mock).mockImplementation((url: string) => {
       if (url.toString().includes('/api/tasks')) {
-        return Promise.resolve({ ok: true, json: () => Promise.resolve(manyTasks) });
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            tasks: manyTasks,
+            pagination: { currentPage: 1, pageSize: 10, totalItems: manyTasks.length, totalPages: 3 },
+          }),
+        });
       }
       return Promise.reject(new Error('Unknown URL'));
     });
     await act(async () => {
       render(<TasksPage />);
     });
-    const showingText = screen.getByText(/of 25 tasks/i);
+    const showingText = screen.getByText(/25 total/i);
     expect(showingText).toBeInTheDocument();
   });
 });
