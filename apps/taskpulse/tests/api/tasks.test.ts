@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 // Mock the database module before importing route handlers
 jest.mock('@/lib/db', () => ({
   getTasks: jest.fn(() => Promise.resolve([])),
-  createTask: jest.fn((task) => Promise.resolve({ id: '1', ...task, createdAt: new Date().toISOString() })),
+  createTask: jest.fn((task: Record<string, unknown>) => Promise.resolve({ id: '1', ...task, createdAt: new Date().toISOString() })),
   updateTask: jest.fn(() => Promise.resolve({ id: '123', status: 'In Progress' })),
   deleteTask: jest.fn(() => Promise.resolve(true)),
 }));
