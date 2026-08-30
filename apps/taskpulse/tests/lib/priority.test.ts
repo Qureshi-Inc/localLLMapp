@@ -4,6 +4,9 @@ import {
   PRIORITY_CONFIG,
   getPriorityOrder,
   sortTasksByPriority,
+  isOverdue,
+  getDueDateStatus,
+  formatDateDisplay,
 } from '@/lib/priority';
 
 describe('PRIORITY_ORDER', () => {
@@ -95,6 +98,7 @@ describe('sortTasksByPriority', () => {
     status: 'Todo' as const,
     priority: priority as any,
     createdAt,
+    dueDate: null,
   });
 
   it('sorts by priority descending (Urgent first, Low last)', () => {
@@ -172,5 +176,74 @@ describe('sortTasksByPriority', () => {
     expect(firstLow > lastMedium).toBe(true);
     expect(lastMedium > lastHigh).toBe(true);
     expect(lastHigh > lastUrgent).toBe(true);
+  });
+});
+
+describe('isOverdue', () => {
+  it('returns true when due date is in the past', () => {
+    expect(isOverdue('2020-01-01')).toBe(true);
+  });
+
+  it('returns false when no due date', () => {
+    expect(isOverdue(null)).toBe(false);
+  });
+
+  it('returns false when due date is today', () => {
+    const today = new Date().toISOString().split('T')[0];
+    expect(isOverdue(today)).toBe(false);
+  });
+
+  it('returns false when due date is in the future', () => {
+    const future = new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0];
+    expect(isOverdue(future)).toBe(false);
+  });
+
+  it('returns false for empty string', () => {
+    expect(isOverdue(null as any)).toBe(false);
+  });
+});
+
+describe('getDueDateStatus', () => {
+  it('returns "none" when no due date', () => {
+    expect(getDueDateStatus(null)).toBe('none');
+  });
+
+  it('returns "overdue" for past dates', () => {
+    expect(getDueDateStatus('2020-01-01')).toBe('overdue');
+  });
+
+  it('returns "today" for today\'s date', () => {
+    const today = new Date().toISOString().split('T')[0];
+    expect(getDueDateStatus(today)).toBe('today');
+  });
+
+  it('returns "due-soon" for dates within 3 days', () => {
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    expect(getDueDateStatus(tomorrow)).toBe('due-soon');
+    const twoDaysFromNow = new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0];
+    expect(getDueDateStatus(twoDaysFromNow)).toBe('due-soon');
+    const threeDaysFromNow = new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0];
+    expect(getDueDateStatus(threeDaysFromNow)).toBe('due-soon');
+  });
+
+  it('returns "future" for dates beyond 3 days', () => {
+    const nextWeek = new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0];
+    expect(getDueDateStatus(nextWeek)).toBe('future');
+  });
+});
+
+describe('formatDateDisplay', () => {
+  it('returns empty string for null input', () => {
+    expect(formatDateDisplay(null)).toBe('');
+  });
+
+  it('formats date as month day', () => {
+    expect(formatDateDisplay('2024-01-15')).toBe('Jan 15');
+    expect(formatDateDisplay('2024-12-25')).toBe('Dec 25');
+  });
+
+  it('handles invalid dates gracefully', () => {
+    const result = formatDateDisplay('not-a-date');
+    expect(typeof result).toBe('string');
   });
 });

@@ -9,7 +9,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const { id } = params;
     const body = await request.json();
 
-    const validatedUpdates: Record<string, string> = {};
+    const validatedUpdates: Record<string, string | null> = {};
     for (const key of ALLOWED_FIELDS) {
       if (key in body) {
         if (key === 'priority') {
@@ -18,6 +18,8 @@ export async function PATCH(request: Request, { params }: { params: { id: string
           } else {
             return NextResponse.json({ error: `Invalid priority. Must be one of: ${VALID_PRIORITIES.join(', ')}` }, { status: 400 });
           }
+        } else if (body[key] === null || body[key] === '') {
+          validatedUpdates[key] = key === 'dueDate' ? null : String(body[key] ?? '');
         } else {
           validatedUpdates[key] = String(body[key]);
         }
