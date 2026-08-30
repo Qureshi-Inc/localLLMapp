@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { isAuthenticated, logout } from '@/lib/auth';
-import { toggleTheme as toggleThemeLib, getTheme, setTheme, type Theme } from '@/lib/theme';
+import { useTheme } from '@/lib/theme-provider';
 
 interface NavItem {
   label: string;
@@ -22,15 +22,10 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [theme, setLocalTheme] = useState<Theme>('light');
-
-  useEffect(() => {
-    setLocalTheme(getTheme());
-  }, []);
+  const { theme: currentTheme, toggleTheme } = useTheme();
 
   useEffect(() => {
     setIsAuthed(isAuthenticated());
-    setLocalTheme(getTheme());
     setLoading(false);
   }, [pathname]);
 
@@ -40,12 +35,6 @@ export default function Navbar() {
     logout();
     setIsAuthed(false);
     router.push('/login');
-  };
-
-  const toggleDarkMode = () => {
-    const newTheme = toggleThemeLib(theme);
-    setLocalTheme(newTheme);
-    setTheme(newTheme);
   };
 
   return (
@@ -99,16 +88,16 @@ export default function Navbar() {
 
           <button
             type="button"
-            onClick={toggleDarkMode}
+            onClick={toggleTheme}
             className={`md:flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all duration-200 ${
-              theme === 'dark'
+              currentTheme === 'dark'
                 ? 'text-surface-300 hover:text-warning-400 hover:bg-surface-800'
                 : 'text-surface-500 hover:text-surface-900 hover:bg-surface-100'
             }`}
-            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label={currentTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={currentTheme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
           >
-            {theme === 'dark' ? (
+            {currentTheme === 'dark' ? (
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
               </svg>
@@ -208,16 +197,16 @@ export default function Navbar() {
           )}
           <button
             type="button"
-            onClick={() => { toggleDarkMode(); setIsMenuOpen(false); }}
+            onClick={() => { toggleTheme(); setIsMenuOpen(false); }}
             className="w-full flex items-center gap-2 px-4 py-3 rounded-lg text-sm transition-colors text-surface-500 hover:text-surface-900 hover:bg-surface-100 dark:hover:bg-surface-800"
             aria-label="Toggle dark mode"
           >
-            {theme === 'dark' ? (
+            {currentTheme === 'dark' ? (
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
             ) : (
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
             )}
-            {theme === 'dark' ? 'Light Mode' : 'Dark Mode'}
+            {currentTheme === 'dark' ? 'Light Mode' : 'Dark Mode'}
           </button>
         </nav>
       </div>

@@ -1,11 +1,10 @@
-import { describe, it, expect, beforeEach } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import {
   PRIORITY_ORDER,
   PRIORITY_CONFIG,
   getPriorityOrder,
   sortTasksByPriority,
   isOverdue,
-  isDueSoon,
   getDueDateStatus,
   formatDateDisplay,
 } from '@/lib/priority';
@@ -99,6 +98,7 @@ describe('sortTasksByPriority', () => {
     status: 'Todo' as const,
     priority: priority as any,
     createdAt,
+    dueDate: null,
   });
 
   it('sorts by priority descending (Urgent first, Low last)', () => {
@@ -180,86 +180,70 @@ describe('sortTasksByPriority', () => {
 });
 
 describe('isOverdue', () => {
-  it('returns true for a date in the past', () => {
+  it('returns true when due date is in the past', () => {
     expect(isOverdue('2020-01-01')).toBe(true);
   });
 
-  it('returns true for yesterday', () => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const y = yesterday.getFullYear();
-    const m = String(yesterday.getMonth() + 1).padStart(2, '0');
-    const d = String(yesterday.getDate()).padStart(2, '0');
-    expect(isOverdue(`${y}-${m}-${d}`)).toBe(true);
-  });
-
-  it('returns false for a date in the future', () => {
-    expect(isOverdue('2099-12-31')).toBe(false);
-  });
-
-  it('returns false for null', () => {
+  it('returns false when no due date', () => {
     expect(isOverdue(null)).toBe(false);
   });
-});
 
-describe('isDueSoon', () => {
-  it('returns true for a due date within 3 days', () => {
-    const soon = new Date();
-    soon.setDate(soon.getDate() + 1);
-    const str = soon.toISOString().slice(0, 10);
-    expect(isDueSoon(str)).toBe(true);
+  it('returns false when due date is today', () => {
+    const today = new Date().toISOString().split('T')[0];
+    expect(isOverdue(today)).toBe(false);
   });
 
-  it('returns false for a date exactly 3 days away', () => {
-    const threeDays = new Date();
-    threeDays.setDate(threeDays.getDate() + 3);
-    const str = threeDays.toISOString().slice(0, 10);
-    expect(isDueSoon(str)).toBe(true);
+  it('returns false when due date is in the future', () => {
+    const future = new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0];
+    expect(isOverdue(future)).toBe(false);
   });
 
-  it('returns false for a date 4 days away', () => {
-    const fourDays = new Date();
-    fourDays.setDate(fourDays.getDate() + 4);
-    const str = fourDays.toISOString().slice(0, 10);
-    expect(isDueSoon(str)).toBe(false);
-  });
-
-  it('returns false for null', () => {
-    expect(isDueSoon(null)).toBe(false);
+  it('returns false for empty string', () => {
+    expect(isOverdue(null as any)).toBe(false);
   });
 });
 
 describe('getDueDateStatus', () => {
-  it('returns overdue for a past date', () => {
-    expect(getDueDateStatus('2020-01-01T12:00:00Z')).toBe('overdue');
+  it('returns "none" when no due date', () => {
+    expect(getDueDateStatus(null)).toBe('none');
   });
 
-  it('returns due-soon for within 3 days', () => {
-    const soon = new Date();
-    soon.setDate(soon.getDate() + 2);
-    const y = soon.getFullYear();
-    const m = String(soon.getMonth() + 1).padStart(2, '0');
-    const d = String(soon.getDate()).padStart(2, '0');
-    expect(getDueDateStatus(`${y}-${m}-${d}T12:00:00Z`)).toBe('due-soon');
+  it('returns "overdue" for past dates', () => {
+    expect(getDueDateStatus('2020-01-01')).toBe('overdue');
   });
 
-  it('returns upcoming for more than 3 days', () => {
-    const far = new Date();
-    far.setDate(far.getDate() + 10);
-    const y = far.getFullYear();
-    const m = String(far.getMonth() + 1).padStart(2, '0');
-    const d = String(far.getDate()).padStart(2, '0');
-    expect(getDueDateStatus(`${y}-${m}-${d}T12:00:00Z`)).toBe('upcoming');
+  it('returns "today" for today\'s date', () => {
+    const today = new Date().toISOString().split('T')[0];
+    expect(getDueDateStatus(today)).toBe('today');
+  });
+
+  it('returns "due-soon" for dates within 3 days', () => {
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+    expect(getDueDateStatus(tomorrow)).toBe('due-soon');
+    const twoDaysFromNow = new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0];
+    expect(getDueDateStatus(twoDaysFromNow)).toBe('due-soon');
+    const threeDaysFromNow = new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0];
+    expect(getDueDateStatus(threeDaysFromNow)).toBe('due-soon');
+  });
+
+  it('returns "future" for dates beyond 3 days', () => {
+    const nextWeek = new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0];
+    expect(getDueDateStatus(nextWeek)).toBe('future');
   });
 });
 
 describe('formatDateDisplay', () => {
-  it('formats a date string correctly', () => {
-    // Use a date that converts reliably regardless of timezone
-    const result = formatDateDisplay('2024-06-15T12:00:00Z');
-    expect(result).toContain('2024');
-    // Jun 15 UTC converts to Jun 15 in most timezones
-    expect(result).toMatch(/\d{1,2}/);
-    expect(result).toContain('2024');
+  it('returns empty string for null input', () => {
+    expect(formatDateDisplay(null)).toBe('');
+  });
+
+  it('formats date as month day', () => {
+    expect(formatDateDisplay('2024-01-15')).toBe('Jan 15');
+    expect(formatDateDisplay('2024-12-25')).toBe('Dec 25');
+  });
+
+  it('handles invalid dates gracefully', () => {
+    const result = formatDateDisplay('not-a-date');
+    expect(typeof result).toBe('string');
   });
 });

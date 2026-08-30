@@ -43,10 +43,13 @@ describe('TasksPage Component', () => {
     expect(screen.getByText('Tasks')).toBeInTheDocument();
   });
 
-  it('shows skeleton loader while fetching tasks initially', () => {
+  it('renders loading spinner initially', async () => {
+    // Block the fetch so the loading state persists long enough to test
+    (global.fetch as jest.Mock).mockImplementationOnce(() => new Promise(() => {}));
     render(<TasksPage />);
-    // Loading state shows skeleton rows with animate-pulse
-    expect(screen.getByText('Tasks')).toBeInTheDocument();
+    // Wait briefly for React to render, then check
+    const skeleton = document.querySelector('.animate-pulse');
+    expect(skeleton).toBeInTheDocument();
   });
 
   it('renders tasks in table rows', async () => {
@@ -202,10 +205,7 @@ describe('TasksPage Component', () => {
     (global.fetch as jest.Mock).mockImplementationOnce(() =>
       Promise.reject(new Error('Network error'))
     );
-    await act(async () => {
-      render(<TasksPage />);
-    });
-    // After fetch error, the page still renders the form and title
+    render(<TasksPage />);
     await waitFor(() => {
       expect(screen.getByText('Tasks')).toBeInTheDocument();
     });

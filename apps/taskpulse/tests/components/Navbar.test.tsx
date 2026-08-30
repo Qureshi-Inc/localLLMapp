@@ -12,8 +12,13 @@ jest.mock('next/navigation', () => ({
   useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn() })),
 }));
 
-jest.mock('@/lib/theme', () => ({
+jest.mock('@/lib/theme-provider', () => ({
   useTheme: jest.fn().mockReturnValue({ theme: 'light', toggleTheme: jest.fn() }),
+}));
+
+jest.mock('@/lib/auth', () => ({
+  isAuthenticated: jest.fn(() => false),
+  logout: jest.fn(),
 }));
 
 import Navbar from '@/components/Navbar';
