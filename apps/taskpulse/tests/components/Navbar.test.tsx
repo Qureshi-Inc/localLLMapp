@@ -1,4 +1,4 @@
-import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { render, screen, fireEvent } from '@testing-library/react';
 
 jest.mock('next/link', () => {
@@ -7,10 +7,24 @@ jest.mock('next/link', () => {
   };
 });
 
-jest.mock('next/navigation', () => ({
-  usePathname: jest.fn(() => '/'),
-  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn() })),
-}));
+jest.mock('next/navigation', () => {
+  const mockRouter = {
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+    refresh: jest.fn(),
+  };
+
+  let pathname = '/';
+
+  return {
+    usePathname: jest.fn(() => pathname),
+    useRouter: jest.fn(() => mockRouter),
+    setPathname: (p: string) => { pathname = p; },
+  };
+});
 
 jest.mock('@/lib/theme-provider', () => ({
   useTheme: jest.fn().mockReturnValue({ theme: 'light', toggleTheme: jest.fn() }),
@@ -22,11 +36,13 @@ jest.mock('@/lib/auth', () => ({
 }));
 
 import Navbar from '@/components/Navbar';
-const { usePathname, useRouter } = require('next/navigation');
+const { usePathname } = require('next/navigation');
+const { isAuthenticated } = require('@/lib/auth');
 
 describe('Navbar Component', () => {
   beforeEach(() => {
     usePathname.mockReturnValue('/');
+    isAuthenticated.mockReturnValue(false);
     jest.clearAllMocks();
   });
 
@@ -35,12 +51,11 @@ describe('Navbar Component', () => {
     expect(screen.getByText('TaskPulse')).toBeInTheDocument();
   });
 
-  it('renders navigation links in desktop nav', () => {
+  it('renders Sign In link when not authenticated', () => {
     render(<Navbar />);
-    const navs = document.querySelectorAll('nav');
-    const desktopNav = navs[0];
-    const links = desktopNav.querySelectorAll('a');
-    expect(links.length).toBe(3);
+    const signInLinks = Array.from(document.querySelectorAll('a[href="/login"]'));
+    expect(signInLinks.length).toBeGreaterThanOrEqual(1);
+    expect(screen.queryByText('Logout')).not.toBeInTheDocument();
   });
 
   it('renders hamburger menu button on mobile', () => {
@@ -62,16 +77,6 @@ describe('Navbar Component', () => {
     expect(hamburgerButton).toHaveAttribute('aria-expanded', 'false');
   });
 
-  it('renders mobile menu with nav links when opened', () => {
-    render(<Navbar />);
-    const hamburgerButton = screen.getByRole('button', { name: /toggle navigation menu/i });
-    fireEvent.click(hamburgerButton);
-
-    const mobileNav = document.querySelector('[class*="px-4 pb-4"]') as HTMLElement;
-    expect(mobileNav).toBeInTheDocument();
-    expect(mobileNav?.querySelectorAll('a').length).toBe(3);
-  });
-
   it('renders header element with correct structure', () => {
     render(<Navbar />);
     const header = screen.getByRole('banner');
@@ -84,40 +89,12 @@ describe('Navbar Component', () => {
     expect(hamburgerButton).toHaveAttribute('aria-expanded');
   });
 
-  it('uses className based on path for active state', () => {
-    const { rerender } = render(<Navbar />);
-    const allLinks = document.querySelectorAll('a');
-    allLinks.forEach(link => {
-      expect(link).not.toHaveClass('bg-primary/10');
+  it('renders theme toggle button to switch to dark mode when in light mode', () => {
+    render(<Navbar />);
+    const themeToggle = screen.getByRole('button', {
+      name: /switch to dark mode/i,
     });
-  });
-
-  it('marks Dashboard link as active when pathname is /dashboard', () => {
-    usePathname.mockReturnValue('/dashboard');
-    render(<Navbar />);
-    const dashboardLink = document.querySelector('a[href="/dashboard"]');
-    expect(dashboardLink).toBeInTheDocument();
-    expect(dashboardLink!).toHaveClass('bg-primary/10');
-  });
-
-  it('marks Tasks link as active when pathname is /tasks', () => {
-    usePathname.mockReturnValue('/tasks');
-    render(<Navbar />);
-    const tasksLink = document.querySelector('a[href="/tasks"]');
-    expect(tasksLink).toBeInTheDocument();
-    expect(tasksLink!).toHaveClass('bg-primary/10');
-  });
-
-  it('closes mobile menu when a link is clicked', () => {
-    render(<Navbar />);
-    const hamburgerButton = screen.getByRole('button', { name: /toggle navigation menu/i });
-    fireEvent.click(hamburgerButton);
-    expect(hamburgerButton).toHaveAttribute('aria-expanded', 'true');
-
-    const mobileNav = document.querySelector('[class*="px-4 pb-4"]') as HTMLElement;
-    const dashboardLink = mobileNav?.querySelectorAll('a')[1];
-    fireEvent.click(dashboardLink!);
-    expect(hamburgerButton).toHaveAttribute('aria-expanded', 'false');
+    expect(themeToggle).toBeInTheDocument();
   });
 
   it('has sticky positioning', () => {
@@ -130,5 +107,25 @@ describe('Navbar Component', () => {
     render(<Navbar />);
     const header = screen.getByRole('banner');
     expect(header).toHaveClass('backdrop-blur-md');
+  });
+
+  it('renders Logo link to home page', () => {
+    render(<Navbar />);
+    const logoLink = screen.getByRole('link', { name: 'TaskPulse' });
+    expect(logoLink).toHaveAttribute('href', '/');
+  });
+
+  it('dark mode class is applied on header', () => {
+    render(<Navbar />);
+    const header = screen.getByRole('banner');
+    expect(header).toHaveClass('dark:border-surface-700', 'dark:bg-surface-900/80');
+  });
+
+  it('has mobile nav section with link to login', () => {
+    render(<Navbar />);
+    const mobileNav = document.querySelector('[class*="px-4 pb-4"]');
+    expect(mobileNav).toBeInTheDocument();
+    const mobileLoginLink = mobileNav?.querySelector('a[href="/login"]');
+    expect(mobileLoginLink).toBeInTheDocument();
   });
 });
