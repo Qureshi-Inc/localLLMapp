@@ -49,14 +49,14 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   return (
     <>
       <aside
-        className={`hidden md:flex flex-col fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] bg-surface-50 border-r border-border transition-all duration-300 ease-in-out
+        className={`hidden md:flex flex-col fixed left-0 top-16 z-40 h-[calc(100vh-4rem)] bg-surface-50 dark:bg-surface-950 border-r border-border dark:border-surface-700 transition-all duration-300 ease-in-out
           ${isCollapsed ? 'w-20' : 'w-64'}`}
       >
-          <div className="flex items-center justify-end h-12 px-4 border-b border-border">
+          <div className="flex items-center justify-end h-12 px-4 border-b border-border dark:border-surface-700">
             <button
               type="button"
               onClick={onToggle}
-              className="p-2 rounded-lg text-surface-500 hover:text-surface-900 hover:bg-surface-200 transition-colors duration-200"
+              className="p-2 rounded-lg text-surface-500 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:bg-surface-200 dark:hover:bg-surface-800 transition-colors duration-200"
               aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               aria-expanded={!isCollapsed}
             >
@@ -76,7 +76,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             {navSections.map((section) => (
               <div key={section.title} className="mb-6">
                 {!isCollapsed && (
-                  <h3 className="px-3 mb-2 text-xs font-semibold uppercase tracking-wider text-muted">
+                  <h3 className="px-3 mb-2 text-xs font-semibold uppercase tracking-wider text-muted dark:text-surface-500">
                     {section.title}
                   </h3>
                 )}
@@ -87,7 +87,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                     className={`relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 group
                       ${isActive(item.href)
                         ? 'bg-primary/10 text-primary border-l-2 border-primary'
-                        : 'text-surface-500 hover:text-surface-900 hover:bg-surface-100 border-l-2 border-transparent'
+                        : 'text-surface-500 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:bg-surface-100 dark:hover:bg-surface-800 border-l-2 border-transparent'
                       }`}
                     title={isCollapsed ? item.label : undefined}
                     aria-current={isActive(item.href) ? 'page' : undefined}
@@ -97,7 +97,7 @@ export default function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                     </span>
                     {!isCollapsed && <span>{item.label}</span>}
                     {isCollapsed && (
-                      <span className="pointer-events-none absolute left-full ml-2 z-50 hidden px-2 py-1 text-xs text-surface-50 bg-surface-800 rounded-md shadow-lg group-hover:block whitespace-nowrap">
+                      <span className="pointer-events-none absolute left-full ml-2 z-50 hidden px-2 py-1 text-xs text-surface-50 bg-surface-800 dark:bg-surface-700 rounded-md shadow-lg group-hover:block whitespace-nowrap">
                         {item.label}
                       </span>
                     )}

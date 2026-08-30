@@ -1,16 +1,28 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { render, screen, fireEvent } from '@testing-library/react';
-import Navbar from '@/components/Navbar';
+
+jest.mock('next/link', () => {
+  return function Link({ href, children, className, target, rel }: any) {
+    return <a href={href} className={className} target={target} rel={rel}>{children}</a>;
+  };
+});
 
 jest.mock('next/navigation', () => ({
-  usePathname: jest.fn(),
+  usePathname: jest.fn(() => '/'),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn() })),
 }));
 
-const { usePathname } = require('next/navigation');
+jest.mock('@/lib/theme', () => ({
+  useTheme: jest.fn().mockReturnValue({ theme: 'light', toggleTheme: jest.fn() }),
+}));
+
+import Navbar from '@/components/Navbar';
+const { usePathname, useRouter } = require('next/navigation');
 
 describe('Navbar Component', () => {
   beforeEach(() => {
     usePathname.mockReturnValue('/');
+    jest.clearAllMocks();
   });
 
   it('renders the TaskPulse logo and brand name', () => {
@@ -73,6 +85,22 @@ describe('Navbar Component', () => {
     allLinks.forEach(link => {
       expect(link).not.toHaveClass('bg-primary/10');
     });
+  });
+
+  it('marks Dashboard link as active when pathname is /dashboard', () => {
+    usePathname.mockReturnValue('/dashboard');
+    render(<Navbar />);
+    const dashboardLink = document.querySelector('a[href="/dashboard"]');
+    expect(dashboardLink).toBeInTheDocument();
+    expect(dashboardLink!).toHaveClass('bg-primary/10');
+  });
+
+  it('marks Tasks link as active when pathname is /tasks', () => {
+    usePathname.mockReturnValue('/tasks');
+    render(<Navbar />);
+    const tasksLink = document.querySelector('a[href="/tasks"]');
+    expect(tasksLink).toBeInTheDocument();
+    expect(tasksLink!).toHaveClass('bg-primary/10');
   });
 
   it('closes mobile menu when a link is clicked', () => {

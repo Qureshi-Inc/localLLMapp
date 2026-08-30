@@ -48,6 +48,7 @@ export async function createTask(task: Omit<Task, 'id' | 'createdAt'>): Promise<
       ...task,
       id: crypto.randomUUID(),
       priority: (task as Partial<Task>).priority || 'Medium',
+      dueDate: (task as Partial<Task>).dueDate || null,
       createdAt: new Date().toISOString(),
     };
     tasks.push(newTask);
