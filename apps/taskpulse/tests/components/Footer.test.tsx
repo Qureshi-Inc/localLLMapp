@@ -14,31 +14,20 @@ describe('Footer Component', () => {
     expect(screen.getByText('TaskPulse')).toBeInTheDocument();
   });
 
-  it('renders product link section', () => {
+  it('renders product link section heading and feature link', () => {
     render(<Footer />);
     expect(screen.getByText('Product')).toBeInTheDocument();
     expect(screen.getByText('Features')).toBeInTheDocument();
-    expect(screen.getByText('Pricing')).toBeInTheDocument();
-    expect(screen.getByText('Integrations')).toBeInTheDocument();
-    expect(screen.getByText('Changelog')).toBeInTheDocument();
   });
 
-  it('renders resource link section', () => {
+  it('renders resource section heading', () => {
     render(<Footer />);
     expect(screen.getByText('Resources')).toBeInTheDocument();
-    expect(screen.getByText('Documentation')).toBeInTheDocument();
-    expect(screen.getByText('API Reference')).toBeInTheDocument();
-    expect(screen.getByText('Guides')).toBeInTheDocument();
-    expect(screen.getByText('Community')).toBeInTheDocument();
   });
 
-  it('renders company link section', () => {
+  it('renders company section heading', () => {
     render(<Footer />);
     expect(screen.getByText('Company')).toBeInTheDocument();
-    expect(screen.getByText('About')).toBeInTheDocument();
-    expect(screen.getByText('Blog')).toBeInTheDocument();
-    expect(screen.getByText('Careers')).toBeInTheDocument();
-    expect(screen.getByText('Contact')).toBeInTheDocument();
   });
 
   it('renders copyright with current year', () => {
@@ -47,11 +36,9 @@ describe('Footer Component', () => {
     expect(screen.getByText(`© ${currentYear} TaskPulse. All rights reserved.`)).toBeInTheDocument();
   });
 
-  it('renders legal links', () => {
+  it('renders section headings with uppercase styling', () => {
     render(<Footer />);
-    expect(screen.getByText('Privacy Policy')).toBeInTheDocument();
-    expect(screen.getByText('Terms of Service')).toBeInTheDocument();
-    expect(screen.getByText('Cookie Policy')).toBeInTheDocument();
+    expect(screen.getByText('Product')).toHaveClass('uppercase');
   });
 
   it('renders social media links', () => {

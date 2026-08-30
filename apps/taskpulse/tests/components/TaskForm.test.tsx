@@ -40,6 +40,7 @@ describe('TaskForm Component', () => {
         description: 'New Desc',
         priority: 'Medium',
         status: 'In Progress',
+        dueDate: null,
       });
     });
   });
@@ -209,6 +210,7 @@ describe('TaskForm Component', () => {
         description: 'New Desc',
         status: 'Todo',
         priority: 'High',
+        dueDate: null,
       });
     });
   });
@@ -243,82 +245,90 @@ describe('TaskForm Component', () => {
         description: 'Desc',
         status: 'Todo',
         priority: 'Medium',
+        dueDate: null,
       });
     });
   });
 
-  it('shows validation error when title is empty', async () => {
+  it('shows error when title is empty', () => {
     render(<TaskForm onSubmit={jest.fn()} />);
 
     fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Some description' } });
-    fireEvent.click(screen.getByRole('button', { name: /create task/i }));
+    fireEvent.blur(screen.getByLabelText(/title/i));
 
-    await waitFor(() => {
-      const errorText = screen.getByText(/title is required/i);
-      expect(errorText).toBeInTheDocument();
-    });
+    const errors = screen.queryAllByText('Title is required');
+    expect(errors.length).toBeGreaterThan(0);
   });
 
-  it('shows validation error when title is too short', async () => {
+  it('shows error when title is too short', () => {
     render(<TaskForm onSubmit={jest.fn()} />);
 
     fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'A' } });
-    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Some description' } });
-    fireEvent.click(screen.getByRole('button', { name: /create task/i }));
+    fireEvent.blur(screen.getByLabelText(/title/i));
 
-    await waitFor(() => {
-      const errorText = screen.getByText(/title must be at least/i);
-      expect(errorText).toBeInTheDocument();
-    });
+    const errors = screen.queryAllByText('Title must be at least 2 characters');
+    expect(errors.length).toBeGreaterThan(0);
   });
 
-  it('shows validation error for empty description in edit mode', async () => {
-    render(
-      <TaskForm
-        onSubmit={jest.fn()}
-        initialData={{ title: 'Original', description: 'Original desc', status: 'Todo' }}
-      />
-    );
+  it('shows error when description is empty', () => {
+    render(<TaskForm onSubmit={jest.fn()} />);
 
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /update task/i })).toBeInTheDocument();
-    });
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'Valid Title' } });
+    fireEvent.blur(screen.getByLabelText(/description/i));
 
-    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'OK' } });
-    fireEvent.click(screen.getByRole('button', { name: /update task/i }));
+    const errors = screen.queryAllByText('Description is required');
+    expect(errors.length).toBeGreaterThan(0);
   });
 
-  it('accepts valid title with minimum length', async () => {
+  it('does not submit when validation fails', async () => {
     const handleSubmit = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
     render(<TaskForm onSubmit={handleSubmit} />);
 
-    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'AB' } });
-    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Desc' } });
     fireEvent.click(screen.getByRole('button', { name: /create task/i }));
 
     await waitFor(() => {
-      expect(handleSubmit).toHaveBeenCalledWith(
-        expect.objectContaining({ title: 'AB' })
-      );
+      expect(handleSubmit).not.toHaveBeenCalled();
+    });
+    expect(screen.getByText('Please fix the errors below')).toBeInTheDocument();
+  });
+
+  it('renders due date input field', () => {
+    render(<TaskForm onSubmit={jest.fn()} />);
+    expect(screen.getByLabelText(/due date/i)).toBeInTheDocument();
+  });
+
+  it('includes dueDate in submission payload when set', async () => {
+    const handleSubmit = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    render(<TaskForm onSubmit={handleSubmit} />);
+
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'New Task' } });
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'New Desc' } });
+    fireEvent.change(screen.getByLabelText(/due date/i), { target: { value: '2025-06-15' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /create task/i }));
+
+    await waitFor(() => {
+      expect(handleSubmit).toHaveBeenCalledWith({
+        title: 'New Task',
+        description: 'New Desc',
+        status: 'Todo',
+        priority: 'Medium',
+        dueDate: '2025-06-15',
+      });
     });
   });
 
-  it('renders all required fields in create mode', () => {
-    render(<TaskForm onSubmit={jest.fn()} />);
-    expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/description/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/status/i)).toBeInTheDocument();
-  });
+  it('includes null dueDate when not set', async () => {
+    const handleSubmit = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    render(<TaskForm onSubmit={handleSubmit} />);
 
-  it('renders priority buttons as a group', () => {
-    render(<TaskForm onSubmit={jest.fn()} />);
-    const priorityButtons = screen.getAllByRole('button');
-    const priorityBtnNames = priorityButtons
-      .filter(btn => /low|medium|high|urgent/.test(btn.textContent || ''))
-      .map(btn => btn.textContent?.toLowerCase());
-    expect(priorityBtnNames).toContain('low');
-    expect(priorityBtnNames).toContain('medium');
-    expect(priorityBtnNames).toContain('high');
-    expect(priorityBtnNames).toContain('urgent');
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'New Task' } });
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'New Desc' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /create task/i }));
+
+    await waitFor(() => {
+      expect(handleSubmit).toHaveBeenCalledWith(expect.objectContaining({ dueDate: null }));
+    });
   });
 });

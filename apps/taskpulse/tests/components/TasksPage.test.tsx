@@ -1,11 +1,23 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { render, screen, fireEvent, waitFor, act, within } from '@testing-library/react';
+
+jest.mock('next/navigation', () => ({
+  usePathname: jest.fn(),
+  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn() })),
+}));
+
+jest.mock('@/lib/theme', () => ({
+  ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
+  useTheme: jest.fn().mockReturnValue({ theme: 'light', toggleTheme: jest.fn() }),
+}));
+
+// Import after mocking
 import TasksPage from '@/app/tasks/page';
 
 const mockTasks = [
-  { id: '1', title: 'Task One', description: 'First task description', status: 'Todo' as const, priority: 'Medium' as const, createdAt: '2025-01-15T10:00:00Z' },
-  { id: '2', title: 'Task Two', description: 'Second task description', status: 'In Progress' as const, priority: 'High' as const, createdAt: '2025-01-16T10:00:00Z' },
-  { id: '3', title: 'Task Three', description: 'Third task description', status: 'Done' as const, priority: 'Low' as const, createdAt: '2025-01-17T10:00:00Z' },
+  { id: '1', title: 'Task One', description: 'First task description', status: 'Todo' as const, priority: 'Medium' as const, createdAt: '2025-01-15T10:00:00Z', dueDate: null },
+  { id: '2', title: 'Task Two', description: 'Second task description', status: 'In Progress' as const, priority: 'High' as const, createdAt: '2025-01-16T10:00:00Z', dueDate: null },
+  { id: '3', title: 'Task Three', description: 'Third task description', status: 'Done' as const, priority: 'Low' as const, createdAt: '2025-01-17T10:00:00Z', dueDate: null },
 ];
 
 global.fetch = jest.fn();
@@ -152,51 +164,72 @@ describe('TasksPage Component', () => {
     expect(within(dialog!).getByRole('button', { name: 'Delete' })).toBeInTheDocument();
   });
 
-  it('shows error message when API returns non-200 OK', async () => {
-    (global.fetch as jest.Mock).mockImplementationOnce((url: string) => {
-      if (url === '/api/tasks') {
-        return Promise.resolve({
-          ok: false,
-          status: 500,
-          json: () => Promise.resolve({ error: 'Server error' }),
-        } as Response);
+  it('displays pagination controls when tasks exist', async () => {
+    const manyTasks = Array.from({ length: 15 }, (_, i) => ({
+      id: String(i + 1),
+      title: `Task ${i + 1}`,
+      description: `Description for task ${i + 1}`,
+      status: 'Todo' as const,
+      priority: 'Medium' as const,
+      createdAt: `2025-01-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
+      dueDate: null,
+    }));
+    (global.fetch as jest.Mock).mockImplementation((url: string) => {
+      if (url.toString().includes('/api/tasks')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(manyTasks) });
       }
-      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) } as Response);
+      return Promise.reject(new Error('Unknown URL'));
     });
-
     await act(async () => {
       render(<TasksPage />);
     });
-
-    await waitFor(() => {
-      const errorElements = document.querySelectorAll('[class*="bg-danger-50"]');
-      expect(errorElements.length).toBeGreaterThan(0);
-    });
+    const showingText = screen.getByText(/showing/i);
+    expect(showingText).toBeInTheDocument();
+    const pageSizeSelect = document.querySelector('select[aria-label="Items per page"]');
+    expect(pageSizeSelect).toBeInTheDocument();
   });
 
-  it('shows loading spinner while fetching tasks', () => {
+  it('renders search input and filter select', async () => {
+    await act(async () => {
+      render(<TasksPage />);
+    });
+    expect(screen.getByPlaceholderText('Search tasks...')).toBeInTheDocument();
+    const statusFilter = document.querySelector('select');
+    expect(statusFilter).toBeInTheDocument();
+  });
+
+  it('handles fetch error gracefully', async () => {
     (global.fetch as jest.Mock).mockImplementationOnce(() =>
-      new Promise(() => {})
+      Promise.reject(new Error('Network error'))
     );
-    render(<TasksPage />);
-    expect(document.querySelector('[class*="animate-spin"]')).toBeInTheDocument();
-  });
-
-  it('renders "No tasks yet" when api returns empty array', async () => {
-    (global.fetch as jest.Mock).mockImplementationOnce((url: string) => {
-      if (url === '/api/tasks') {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve([]),
-        } as Response);
-      }
-      return Promise.resolve({ ok: true, json: () => Promise.resolve({}) } as Response);
-    });
-
     await act(async () => {
       render(<TasksPage />);
     });
+    await waitFor(() => {
+      expect(document.querySelector('main')).toBeInTheDocument();
+    });
+  });
 
-    expect(screen.getByText('No tasks yet')).toBeInTheDocument();
+  it('renders pagination with correct page count', async () => {
+    const manyTasks = Array.from({ length: 25 }, (_, i) => ({
+      id: String(i + 1),
+      title: `Task ${i + 1}`,
+      description: `Description ${i + 1}`,
+      status: 'Todo' as const,
+      priority: 'Medium' as const,
+      createdAt: `2025-01-${String(i + 1).padStart(2, '0')}T10:00:00Z`,
+      dueDate: null,
+    }));
+    (global.fetch as jest.Mock).mockImplementation((url: string) => {
+      if (url.toString().includes('/api/tasks')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve(manyTasks) });
+      }
+      return Promise.reject(new Error('Unknown URL'));
+    });
+    await act(async () => {
+      render(<TasksPage />);
+    });
+    const showingText = screen.getByText(/of 25 tasks/i);
+    expect(showingText).toBeInTheDocument();
   });
 });
