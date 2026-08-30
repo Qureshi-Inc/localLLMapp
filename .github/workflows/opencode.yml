@@ -8,11 +8,18 @@ on:
 
 jobs:
   opencode:
+    # SECURITY: only trusted actors (repo owner / org member / collaborator) may
+    # invoke the agent. Without this gate ANY GitHub user could comment "/oc" and
+    # run attacker-controlled instructions on the self-hosted runner with write
+    # access to the repo (CWE-863).
     if: |
-      contains(github.event.comment.body, ' /oc') ||
-      startsWith(github.event.comment.body, '/oc') ||
-      contains(github.event.comment.body, ' /opencode') ||
-      startsWith(github.event.comment.body, '/opencode')
+      (github.event.comment.author_association == 'OWNER' ||
+       github.event.comment.author_association == 'MEMBER' ||
+       github.event.comment.author_association == 'COLLABORATOR') &&
+      (contains(github.event.comment.body, ' /oc') ||
+       startsWith(github.event.comment.body, '/oc') ||
+       contains(github.event.comment.body, ' /opencode') ||
+       startsWith(github.event.comment.body, '/opencode'))
     runs-on: self-hosted
     permissions:
       id-token: write

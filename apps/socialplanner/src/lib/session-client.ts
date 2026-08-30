@@ -83,29 +83,3 @@ export async function signOutClient(): Promise<void> {
 
   window.location.href = '/login';
 }
-
-export function getSessionFromCookies(): { userId: string } | null {
-  const cookies = document.cookie.split(';');
-  const sessionCookie = cookies.find(c => c.trim().startsWith(`${SESSION_COOKIE_NAME}=`));
-  if (!sessionCookie) return null;
-
-  const cookieValue = sessionCookie.trim().split('=').slice(1).join('=');
-  const parts = cookieValue.split('.');
-
-  if (parts.length !== 2) {
-    return null;
-  }
-
-  const [encodedPayload] = parts;
-
-  try {
-    const payload = atob(encodedPayload);
-    const sessionPayload: SessionPayload = JSON.parse(payload);
-    if (!sessionPayload.userId) {
-      return null;
-    }
-    return { userId: sessionPayload.userId };
-  } catch {
-    return null;
-  }
-}

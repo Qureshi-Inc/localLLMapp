@@ -6,10 +6,22 @@ import { SessionUser, User } from './types';
 const SESSION_COOKIE_NAME = 'session-token';
 const SESSION_MAX_AGE = 7 * 24 * 60 * 60; // 7 days in seconds
 
+// Known-insecure placeholder values that must never be used to sign sessions.
+// If any of these (or a too-short secret) reach production, session cookies are
+// trivially forgeable for any userId, so we fail closed instead (CWE-798/CWE-521).
+const WEAK_SECRETS = new Set(['change-me-in-production', 'changeme', 'secret', 'password']);
+const MIN_SECRET_LENGTH = 32;
+
 function getSecret(): string {
   const secret = process.env.SESSION_SECRET;
   if (!secret) {
     throw new Error('SESSION_SECRET environment variable is not set');
+  }
+  if (WEAK_SECRETS.has(secret) || secret.length < MIN_SECRET_LENGTH) {
+    throw new Error(
+      'SESSION_SECRET is a placeholder or too weak. Set a random value of at ' +
+        `least ${MIN_SECRET_LENGTH} characters (e.g. \`openssl rand -base64 32\`).`
+    );
   }
   return secret;
 }

@@ -1,6 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 
-process.env.SESSION_SECRET = 'test-secret-key-for-signing';
+process.env.SESSION_SECRET = 'zJ8pQ2vT5wX9bN3mK7rL4sD6fG1hY0aC8eU2iO5pWq';
 
 describe('getSessionFromRequest', () => {
   beforeEach(() => {
@@ -56,7 +56,7 @@ describe('getSessionFromRequest', () => {
 
     const { getSessionFromRequest } = await import('@/lib/session-client');
     const payload = btoa(JSON.stringify({ userId: 'usr_123', token: 'test-token' }));
-    const validSecret = 'test-secret-key-for-signing';
+    const validSecret = 'zJ8pQ2vT5wX9bN3mK7rL4sD6fG1hY0aC8eU2iO5pWq';
     const { createSignature } = await import('@/lib/session-client');
 
     process.env.SESSION_SECRET = originalSecret;
