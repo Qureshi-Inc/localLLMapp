@@ -289,7 +289,11 @@ describe('TaskForm Component', () => {
     await waitFor(() => {
       expect(handleSubmit).not.toHaveBeenCalled();
     });
-    expect(screen.getByText('Please fix the errors below')).toBeInTheDocument();
+    // Wait for React to flush validated errors and render validation banner
+    await new Promise(resolve => setTimeout(resolve, 50));
+    expect(screen.queryByText(/Please fix the errors below/)).toBeInTheDocument();
+    expect(screen.queryByText('Title is required')).toBeInTheDocument();
+    expect(screen.queryByText('Description is required')).toBeInTheDocument();
   });
 
   it('renders due date input field', () => {
@@ -303,7 +307,11 @@ describe('TaskForm Component', () => {
 
     fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'New Task' } });
     fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'New Desc' } });
-    fireEvent.change(screen.getByLabelText(/due date/i), { target: { value: '2025-06-15' } });
+    // Use a future date to pass validation
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 7);
+    const futureDateStr = futureDate.toISOString().slice(0, 10);
+    fireEvent.change(screen.getByLabelText(/due date/i), { target: { value: futureDateStr } });
 
     fireEvent.click(screen.getByRole('button', { name: /create task/i }));
 
@@ -313,7 +321,7 @@ describe('TaskForm Component', () => {
         description: 'New Desc',
         status: 'Todo',
         priority: 'Medium',
-        dueDate: '2025-06-15',
+        dueDate: futureDateStr,
       });
     });
   });

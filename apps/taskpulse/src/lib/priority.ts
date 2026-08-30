@@ -11,6 +11,7 @@ export interface Task {
   status: 'Todo' | 'In Progress' | 'Done';
   priority: Priority;
   createdAt: string;
+  dueDate: string | null;
 }
 
 export const PRIORITY_ORDER: Record<Priority, number> = {
@@ -37,4 +38,43 @@ export function sortTasksByPriority(tasks: Task[]): Task[] {
     if (priorityDiff !== 0) return priorityDiff;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
+}
+
+export function isOverdue(dueDate: string | null): boolean {
+  if (!dueDate) return false;
+  const due = new Date(dueDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return due < today;
+}
+
+export function isDueSoon(dueDate: string | null): boolean {
+  if (!dueDate) return false;
+  const due = new Date(dueDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diff = (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+  return diff > 0 && diff <= 3;
+}
+
+export type DueDateStatus = 'overdue' | 'today' | 'due-soon' | 'upcoming' | 'done';
+
+export function getDueDateStatus(dueDate: string): DueDateStatus {
+  const due = new Date(dueDate);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  due.setHours(0, 0, 0, 0);
+
+  if (due < today) return 'overdue';
+  if (due.getTime() === today.getTime()) return 'today';
+
+  const diff = (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24);
+  if (diff <= 3) return 'due-soon';
+  if (diff > 3) return 'upcoming';
+  return 'done';
+}
+
+export function formatDateDisplay(dateStr: string): string {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }

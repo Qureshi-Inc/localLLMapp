@@ -7,15 +7,7 @@ import type { Priority } from '@/lib/priority';
 import { PRIORITY_CONFIG, PRIORITY_ORDER, getDueDateStatus, isOverdue, formatDateDisplay } from '@/lib/priority';
 import { ToastProvider, useToast } from '@/components/Toast';
 
-interface Task {
-  id: string;
-  title: string;
-  description: string;
-  status: 'Todo' | 'In Progress' | 'Done';
-  priority: 'Low' | 'Medium' | 'High' | 'Urgent';
-  createdAt: string;
-  dueDate: string | null;
-}
+import type { Task as TaskType } from '@/lib/priority';
 
 const STATUS_CYCLE: Record<string, string> = {
   'Todo': 'In Progress',
@@ -105,9 +97,9 @@ function isDueSoon(dateStr?: string): boolean {
 
 function TasksPageContent() {
   const { addToast } = useToast();
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<TaskType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [editingTask, setEditingTask] = useState<TaskType | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');

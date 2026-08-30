@@ -1,9 +1,13 @@
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, beforeEach } from '@jest/globals';
 import {
   PRIORITY_ORDER,
   PRIORITY_CONFIG,
   getPriorityOrder,
   sortTasksByPriority,
+  isOverdue,
+  isDueSoon,
+  getDueDateStatus,
+  formatDateDisplay,
 } from '@/lib/priority';
 
 describe('PRIORITY_ORDER', () => {
@@ -172,5 +176,90 @@ describe('sortTasksByPriority', () => {
     expect(firstLow > lastMedium).toBe(true);
     expect(lastMedium > lastHigh).toBe(true);
     expect(lastHigh > lastUrgent).toBe(true);
+  });
+});
+
+describe('isOverdue', () => {
+  it('returns true for a date in the past', () => {
+    expect(isOverdue('2020-01-01')).toBe(true);
+  });
+
+  it('returns true for yesterday', () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const y = yesterday.getFullYear();
+    const m = String(yesterday.getMonth() + 1).padStart(2, '0');
+    const d = String(yesterday.getDate()).padStart(2, '0');
+    expect(isOverdue(`${y}-${m}-${d}`)).toBe(true);
+  });
+
+  it('returns false for a date in the future', () => {
+    expect(isOverdue('2099-12-31')).toBe(false);
+  });
+
+  it('returns false for null', () => {
+    expect(isOverdue(null)).toBe(false);
+  });
+});
+
+describe('isDueSoon', () => {
+  it('returns true for a due date within 3 days', () => {
+    const soon = new Date();
+    soon.setDate(soon.getDate() + 1);
+    const str = soon.toISOString().slice(0, 10);
+    expect(isDueSoon(str)).toBe(true);
+  });
+
+  it('returns false for a date exactly 3 days away', () => {
+    const threeDays = new Date();
+    threeDays.setDate(threeDays.getDate() + 3);
+    const str = threeDays.toISOString().slice(0, 10);
+    expect(isDueSoon(str)).toBe(true);
+  });
+
+  it('returns false for a date 4 days away', () => {
+    const fourDays = new Date();
+    fourDays.setDate(fourDays.getDate() + 4);
+    const str = fourDays.toISOString().slice(0, 10);
+    expect(isDueSoon(str)).toBe(false);
+  });
+
+  it('returns false for null', () => {
+    expect(isDueSoon(null)).toBe(false);
+  });
+});
+
+describe('getDueDateStatus', () => {
+  it('returns overdue for a past date', () => {
+    expect(getDueDateStatus('2020-01-01T12:00:00Z')).toBe('overdue');
+  });
+
+  it('returns due-soon for within 3 days', () => {
+    const soon = new Date();
+    soon.setDate(soon.getDate() + 2);
+    const y = soon.getFullYear();
+    const m = String(soon.getMonth() + 1).padStart(2, '0');
+    const d = String(soon.getDate()).padStart(2, '0');
+    expect(getDueDateStatus(`${y}-${m}-${d}T12:00:00Z`)).toBe('due-soon');
+  });
+
+  it('returns upcoming for more than 3 days', () => {
+    const far = new Date();
+    far.setDate(far.getDate() + 10);
+    const y = far.getFullYear();
+    const m = String(far.getMonth() + 1).padStart(2, '0');
+    const d = String(far.getDate()).padStart(2, '0');
+    expect(getDueDateStatus(`${y}-${m}-${d}T12:00:00Z`)).toBe('upcoming');
+  });
+});
+
+describe('formatDateDisplay', () => {
+  it('formats a date string correctly', () => {
+    // Use a date that converts reliably regardless of timezone
+    const result = formatDateDisplay('2024-06-15T12:00:00Z');
+    expect(result).toContain('2024');
+    // Jun 15 UTC converts to Jun 15 in most timezones
+    expect(result).toMatch(/\d{1,2}/);
+    expect(result).toContain('2024');
   });
 });

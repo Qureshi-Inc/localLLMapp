@@ -1,14 +1,16 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { GET, POST } from '@/app/api/tasks/route';
-import { PATCH, DELETE } from '@/app/api/tasks/[id]/route';
 
-// Mock the database module
+// Mock the database module before importing route handlers
 jest.mock('@/lib/db', () => ({
   getTasks: jest.fn(() => Promise.resolve([])),
   createTask: jest.fn((task) => Promise.resolve({ id: '1', ...task, createdAt: new Date().toISOString() })),
   updateTask: jest.fn(() => Promise.resolve({ id: '123', status: 'In Progress' })),
   deleteTask: jest.fn(() => Promise.resolve(true)),
 }));
+
+// Now import route handlers with globals available (set up in jest.setup.js)
+const { GET, POST } = require('@/app/api/tasks/route');
+const { PATCH, DELETE } = require('@/app/api/tasks/[id]/route');
 
 describe('API Routes', () => {
   beforeEach(() => {
