@@ -189,7 +189,7 @@ function DonutChart({ tasks }: { tasks: Task[] }) {
     <div className="flex flex-col sm:flex-row items-center gap-6">
       <div className="relative w-36 h-36 flex-shrink-0">
         <svg viewBox="0 0 36 36" className="w-full h-full -rotate-90">
-          <circle cx="18" cy="18" r="15.915" fill="none" stroke="#e4e4e7" strokeWidth="3" />
+          <circle cx="18" cy="18" r="15.915" fill="none" stroke="var(--border)" strokeWidth="3" />
           {total > 0 && (
             <>
               <circle
@@ -333,30 +333,30 @@ function DashboardPageContent() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {[1, 2, 3].map(i => (
-            <div key={i} className="bg-white rounded-xl border border-border shadow-sm p-5 sm:p-6 animate-pulse">
-              <div className="w-10 h-10 bg-surface-200 rounded-lg mb-4" />
-              <div className="w-20 h-4 bg-surface-200 rounded mb-2" />
-              <div className="w-16 h-8 bg-surface-200 rounded mb-4" />
-              <div className="w-full h-2 bg-surface-200 rounded" />
+            <div key={i} className="bg-white dark:bg-surface-900 rounded-xl border border-border dark:border-surface-700 shadow-sm p-5 sm:p-6 animate-pulse">
+              <div className="w-10 h-10 bg-surface-200 dark:bg-surface-700 rounded-lg mb-4" />
+              <div className="w-20 h-4 bg-surface-200 dark:bg-surface-700 rounded mb-2" />
+              <div className="w-16 h-8 bg-surface-200 dark:bg-surface-700 rounded mb-4" />
+              <div className="w-full h-2 bg-surface-200 dark:bg-surface-700 rounded" />
             </div>
           ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          <div className="bg-white rounded-xl border border-border shadow-sm p-5 sm:p-6 animate-pulse">
-            <div className="w-40 h-5 bg-surface-200 rounded mb-6" />
+          <div className="bg-white dark:bg-surface-900 rounded-xl border border-border dark:border-surface-700 shadow-sm p-5 sm:p-6 animate-pulse">
+            <div className="w-40 h-5 bg-surface-200 dark:bg-surface-700 rounded mb-6" />
             <div className="flex items-end gap-3 h-48">
               {[0.65, 0.85, 0.45, 0.9, 0.7, 0.35, 0.2].map((h, i) => (
-                <div key={i} className="flex-1 bg-surface-200 rounded-t-md" style={{ height: `${h * 160}px` }} />
+                <div key={i} className="flex-1 bg-surface-200 dark:bg-surface-700 rounded-t-md" style={{ height: `${h * 160}px` }} />
               ))}
             </div>
           </div>
-          <div className="bg-white rounded-xl border border-border shadow-sm p-5 sm:p-6 animate-pulse">
-            <div className="w-40 h-5 bg-surface-200 rounded mb-6" />
+          <div className="bg-white dark:bg-surface-900 rounded-xl border border-border dark:border-surface-700 shadow-sm p-5 sm:p-6 animate-pulse">
+            <div className="w-40 h-5 bg-surface-200 dark:bg-surface-700 rounded mb-6" />
             <div className="flex items-center gap-6">
-              <div className="w-36 h-36 rounded-full bg-surface-200" />
+              <div className="w-36 h-36 rounded-full bg-surface-200 dark:bg-surface-700" />
               <div className="flex-1 space-y-3">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="w-full h-4 bg-surface-200 rounded" />
+                  <div key={i} className="w-full h-4 bg-surface-200 dark:bg-surface-700 rounded" />
                 ))}
               </div>
             </div>
@@ -510,14 +510,14 @@ function DashboardPageContent() {
                     </div>
                     <div className="hidden sm:flex items-center gap-2">
                       <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                        task.status === 'Done' ? 'bg-success-100 text-success-700' :
-                        task.status === 'In Progress' ? 'bg-warning-100 text-warning-700' :
-                        'bg-surface-100 text-surface-700'
+                        task.status === 'Done' ? 'bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400' :
+                        task.status === 'In Progress' ? 'bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400' :
+                        'bg-surface-100 text-surface-700 dark:bg-surface-700 dark:text-surface-300'
                       }`}>
                         {task.status}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/50 group-hover:bg-white inset-shadow-sm transition-colors">
+                    <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-surface-100/40 dark:bg-surface-800/40 group-hover:bg-surface-100 dark:group-hover:bg-surface-800 inset-shadow-sm transition-colors">
                       <button
                         onClick={() => handleToggleStatus(task.id, task.status)}
                         className="p-1.5 rounded-md hover:bg-surface-100 text-muted hover:text-surface-700 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
