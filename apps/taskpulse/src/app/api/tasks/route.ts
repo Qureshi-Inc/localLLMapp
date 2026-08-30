@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getTasks, createTask } from '@/lib/db';
 
 const VALID_PRIORITIES = ['Low', 'Medium', 'High', 'Urgent'] as const;
@@ -13,7 +13,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { title, description, status, priority: rawPriority, dueDate } = body;

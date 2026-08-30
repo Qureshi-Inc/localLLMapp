@@ -1,13 +1,13 @@
 // Server-only persistence layer. Do not import this from a client component —
 // it pulls in fs. Client components should import types and priority metadata
-// from ./priority instead.
+// from ./priority instead. Persistence lives in ./db.
 import fs from 'fs';
 import path from 'path';
 
 import type { Task } from './priority';
 
 export type { Priority, Task } from './priority';
-export { PRIORITY_ORDER, PRIORITY_CONFIG, getPriorityOrder, sortTasksByPriority } from './priority';
+export { PRIORITY_ORDER, PRIORITY_CONFIG, getPriorityOrder, sortTasksByPriority, isOverdue, getDueDateStatus, formatDateDisplay } from './priority';
 
 const DB_PATH = path.join(process.cwd(), 'data', 'tasks.json');
 
@@ -47,8 +47,8 @@ export async function createTask(task: Omit<Task, 'id' | 'createdAt'>): Promise<
     const newTask: Task = {
       ...task,
       id: crypto.randomUUID(),
-      priority: (task as Partial<Task>).priority || 'Medium',
-      dueDate: (task as Partial<Task>).dueDate || null,
+      priority: task.priority || 'Medium',
+      dueDate: task.dueDate || null,
       createdAt: new Date().toISOString(),
     };
     tasks.push(newTask);

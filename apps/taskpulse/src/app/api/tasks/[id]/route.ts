@@ -1,20 +1,20 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { updateTask, deleteTask } from '@/lib/db';
 
 const ALLOWED_FIELDS = ['title', 'description', 'status', 'priority', 'dueDate'];
 const VALID_PRIORITIES = ['Low', 'Medium', 'High', 'Urgent'] as const;
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
 
     const validatedUpdates: Record<string, string> = {};
     for (const key of ALLOWED_FIELDS) {
       if (key in body) {
         if (key === 'priority') {
-          if (VALID_PRIORITIES.includes(body[key])) {
-            validatedUpdates[key] = body[key];
+          if (VALID_PRIORITIES.includes(body[key] as typeof VALID_PRIORITIES[number])) {
+            validatedUpdates[key] = body[key] as string;
           } else {
             return NextResponse.json({ error: `Invalid priority. Must be one of: ${VALID_PRIORITIES.join(', ')}` }, { status: 400 });
           }
@@ -35,9 +35,9 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { id } = params;
+    const { id } = await params;
 
     const deleted = await deleteTask(id);
     if (!deleted) {

@@ -11,6 +11,7 @@ export interface Task {
   status: 'Todo' | 'In Progress' | 'Done';
   priority: Priority;
   createdAt: string;
+  dueDate: string | null;
 }
 
 export const PRIORITY_ORDER: Record<Priority, number> = {
@@ -37,4 +38,38 @@ export function sortTasksByPriority(tasks: Task[]): Task[] {
     if (priorityDiff !== 0) return priorityDiff;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
+}
+
+/** Check whether the given due date is in the past. */
+export function isOverdue(dueDate: string | null): boolean {
+  if (!dueDate) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(dueDate + 'T00:00:00');
+  return due < today;
+}
+
+/** Return a human-readable status label for a due date. */
+export function getDueDateStatus(dueDate: string | null): 'overdue' | 'today' | 'due-soon' | 'future' | 'none' {
+  if (!dueDate) return 'none';
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(dueDate + 'T00:00:00');
+  const diffMs = due.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) return 'overdue';
+  if (diffDays === 0) return 'today';
+  if (diffDays <= 3) return 'due-soon';
+  return 'future';
+}
+
+/** Format a due date for display (e.g. "Aug 30"). */
+export function formatDateDisplay(dueDate: string | null): string {
+  if (!dueDate) return '';
+  try {
+    const date = new Date(dueDate + 'T00:00:00');
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  } catch {
+    return dueDate;
+  }
 }
