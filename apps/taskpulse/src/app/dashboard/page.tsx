@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import type { Priority } from '@/lib/priority';
-import { PRIORITY_CONFIG } from '@/lib/priority';
+import { PRIORITY_CONFIG, isOverdue, formatDateDisplay } from '@/lib/priority';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
 interface Task {
@@ -13,6 +13,7 @@ interface Task {
   status: 'Todo' | 'In Progress' | 'Done';
   priority: Priority;
   createdAt: string;
+  dueDate: string | null;
 }
 
 const STATUS_CYCLE: Record<string, string> = {
@@ -90,10 +91,10 @@ function StatCard({ label, value, total, config, href }: StatCardProps) {
   const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
 
   return (
-    <Link
-      href={href}
-      className={`group bg-white rounded-xl border border-border shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden ${config.bgHover}`}
-    >
+      <Link
+        href={href}
+        className={`group bg-white dark:bg-surface-900 rounded-xl border border-border dark:border-surface-700 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden ${config.bgHover}`}
+      >
       <div className="p-5 sm:p-6">
         <div className="flex items-center justify-between mb-4">
           <span className={`inline-flex items-center justify-center w-10 h-10 rounded-lg ${config.bg} ${config.color}`}>
@@ -124,7 +125,7 @@ function StatCard({ label, value, total, config, href }: StatCardProps) {
 
 function ChartPlaceholder({ title, subtitle, children }: { title: string; subtitle: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white rounded-xl border border-border shadow-sm p-5 sm:p-6">
+    <div className="bg-white dark:bg-surface-900 rounded-xl border border-border dark:border-surface-700 shadow-sm p-5 sm:p-6">
       <div className="flex items-start justify-between mb-6">
         <div>
           <h3 className="text-base font-semibold text-surface-900">{title}</h3>
@@ -212,21 +213,21 @@ function DonutChart({ tasks }: { tasks: Task[] }) {
           <span className="text-xs text-muted">Total</span>
         </div>
       </div>
-      <div className="flex-1 space-y-3 w-full">
-        {[
-          { label: 'Completed', value: completed, color: 'bg-success-500', pct: completedPct },
-          { label: 'In Progress', value: inProgress, color: 'bg-warning-500', pct: inProgressPct },
-          { label: 'Todo', value: todo, color: 'bg-surface-500', pct: todoPct },
-        ].map((item) => (
-          <div key={item.label}>
-            <div className="flex items-center justify-between text-sm mb-1">
-              <div className="flex items-center gap-2">
-                <span className={`w-2.5 h-2.5 rounded-full ${item.color}`} />
-                <span className="text-surface-700 font-medium">{item.label}</span>
+        <div className="flex-1 space-y-3 w-full">
+          {[
+            { label: 'Completed', value: completed, color: 'bg-success-500', pct: completedPct },
+            { label: 'In Progress', value: inProgress, color: 'bg-warning-500', pct: inProgressPct },
+            { label: 'Todo', value: todo, color: 'bg-surface-500', pct: todoPct },
+          ].map((item) => (
+            <div key={item.label}>
+              <div className="flex items-center justify-between text-sm mb-1">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2.5 h-2.5 rounded-full ${item.color}`} />
+                  <span className="text-surface-700 dark:text-surface-300 font-medium">{item.label}</span>
+                </div>
+                <span className="text-surface-900 dark:text-surface-100 font-semibold">{item.value}</span>
               </div>
-              <span className="text-surface-900 font-semibold">{item.value}</span>
-            </div>
-            <div className="w-full bg-surface-100 rounded-full h-1.5">
+              <div className="w-full bg-surface-100 dark:bg-surface-700 rounded-full h-1.5">
               <div
                 className={`h-1.5 rounded-full ${item.color}`}
                 style={{ width: `${item.pct}%` }}
@@ -401,7 +402,7 @@ export default function DashboardPage() {
       </div>
 
       {error && (
-        <div className="flex items-center gap-3 p-4 bg-danger-50 border border-danger-200 rounded-lg text-danger-700 text-sm">
+        <div className="flex items-center gap-3 p-4 bg-danger-50 dark:bg-danger-900/20 border border-danger-200 dark:border-danger-800 rounded-lg text-danger-700 dark:text-danger-400 text-sm">
           <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -449,8 +450,8 @@ export default function DashboardPage() {
         </ChartPlaceholder>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        <div className="lg:col-span-2 bg-white rounded-xl border border-border shadow-sm">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="lg:col-span-2 bg-white dark:bg-surface-900 rounded-xl border border-border dark:border-surface-700 shadow-sm">
           <div className="flex items-center justify-between p-5 sm:p-6 pb-0">
             <div>
               <h3 className="text-base font-semibold text-surface-900">Recent Tasks</h3>
@@ -484,7 +485,7 @@ export default function DashboardPage() {
                 </Link>
               </div>
             ) : (
-              <div className="divide-y divide-border">
+              <div className="divide-y divide-border dark:divide-surface-700">
                 {recentTasks.map((task) => (
                   <div key={task.id} className="group flex items-center gap-4 py-3 first:pt-0 last:pb-0">
                     <div className="flex-1 min-w-0">
@@ -495,8 +496,17 @@ export default function DashboardPage() {
                         <p className="text-sm font-medium text-surface-900 group-hover:text-primary transition-colors truncate">
                           {task.title}
                         </p>
+                        {task.dueDate && (
+                          <span className={`flex items-center gap-0.5 flex-shrink-0 text-xs ${
+                            isOverdue(task.dueDate) ? 'text-danger-600 dark:text-danger-400' :
+                            new Date(task.dueDate).toDateString() === new Date().toDateString() ? 'text-warning-600 dark:text-warning-400' :
+                            (() => { const d = new Date(task.dueDate); const diff = Math.ceil((d.getTime() - new Date().setHours(0,0,0,0)) / 86400000); return diff <= 3 && diff > 0 ? 'text-yellow-600 dark:text-yellow-400' : 'text-muted dark:text-surface-500'; })()
+                          }`}>
+                            {formatDateDisplay(task.dueDate)}
+                          </span>
+                        )}
                       </div>
-                      <p className="text-xs text-muted truncate">{task.description}</p>
+                      <p className="text-xs text-muted dark:text-surface-500 truncate">{task.description}</p>
                     </div>
                     <div className="hidden sm:flex items-center gap-2">
                       <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${
@@ -550,7 +560,7 @@ export default function DashboardPage() {
           cancelLabel="Cancel"
         />
 
-        <div className="bg-white rounded-xl border border-border shadow-sm">
+        <div className="bg-white dark:bg-surface-900 rounded-xl border border-border dark:border-surface-700 shadow-sm">
           <div className="p-5 sm:p-6 pb-0">
             <h3 className="text-base font-semibold text-surface-900">Quick Stats</h3>
             <p className="text-sm text-muted mt-1">Summary overview</p>
@@ -561,21 +571,21 @@ export default function DashboardPage() {
                 <span className="text-sm text-muted">Total Tasks</span>
                 <span className="text-lg font-bold text-surface-900">{totalTasks}</span>
               </div>
-              <div className="h-px bg-border" />
+              <div className="h-px bg-border dark:bg-surface-700" />
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted">Completion Rate</span>
-                <span className="text-lg font-bold text-success-600">
+                <span className="text-sm text-muted dark:text-surface-500">Completion Rate</span>
+                <span className="text-lg font-bold text-success-600 dark:text-success-400">
                   {totalTasks > 0 ? Math.round((doneCount / totalTasks) * 100) : 0}%
                 </span>
               </div>
-              <div className="h-px bg-border" />
+              <div className="h-px bg-border dark:bg-surface-700" />
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted">In Progress</span>
-                <span className="text-lg font-bold text-warning-600">{inProgressCount}</span>
+                <span className="text-sm text-muted dark:text-surface-500">In Progress</span>
+                <span className="text-lg font-bold text-warning-600 dark:text-warning-400">{inProgressCount}</span>
               </div>
-              <div className="h-px bg-border" />
+              <div className="h-px bg-border dark:bg-surface-700" />
               <div className="flex items-center justify-between">
-                <span className="text-sm text-muted">This Week</span>
+                <span className="text-sm text-muted dark:text-surface-500">This Week</span>
                 <span className="text-lg font-bold text-primary">
                   {computeActivityData(tasks).reduce((sum, d) => sum + d.value, 0)}
                 </span>

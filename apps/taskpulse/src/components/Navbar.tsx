@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { isAuthenticated, logout } from '@/lib/auth';
+import { useTheme } from '@/lib/theme';
 
 interface NavItem {
   label: string;
@@ -21,6 +22,7 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     setIsAuthed(isAuthenticated());
@@ -36,7 +38,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-border shadow-sm">
+    <header className="sticky top-0 z-50 w-full bg-white/80 dark:bg-surface-900/80 backdrop-blur-md border-b border-border dark:border-surface-700 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link
@@ -72,7 +74,7 @@ export default function Navbar() {
                   className={`relative px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     isActive(item.href)
                       ? 'text-primary bg-primary/10'
-                      : 'text-surface-500 hover:text-surface-900 hover:bg-surface-100'
+                      : 'text-surface-500 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:bg-surface-100 dark:hover:bg-surface-800'
                   }`}
                 >
                   {item.label}
@@ -83,6 +85,27 @@ export default function Navbar() {
               ))}
             </nav>
           )}
+
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-surface-500 hover:text-surface-900 hover:bg-surface-100 transition-all duration-200"
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {theme === 'dark' ? (
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+              </svg>
+            )}
+            <span className="hidden lg:inline">
+              {theme === 'dark' ? 'Light' : 'Dark'}
+            </span>
+          </button>
 
           <div className="flex items-center gap-3">
             {isAuthed && !loading ? (
@@ -101,7 +124,7 @@ export default function Navbar() {
             ) : !loading && (
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-600 transition-colors shadow-sm"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-600 transition-colors shadow-sm dark:shadow-none"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
@@ -112,7 +135,7 @@ export default function Navbar() {
 
             <button
               type="button"
-              className="md:hidden p-2 rounded-lg text-surface-500 hover:text-surface-900 hover:bg-surface-100 transition-colors duration-200"
+              className="md:hidden p-2 rounded-lg text-surface-500 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors duration-200"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label="Toggle navigation menu"
               aria-expanded={isMenuOpen}
@@ -146,7 +169,7 @@ export default function Navbar() {
                   className={`block px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 ${
                     isActive(item.href)
                       ? 'bg-primary/10 text-primary'
-                      : 'text-surface-500 hover:text-surface-900 hover:bg-surface-100'
+                      : 'text-surface-500 dark:text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 hover:bg-surface-100 dark:hover:bg-surface-800'
                   }`}
                   onClick={() => setIsMenuOpen(false)}
                 >
@@ -157,7 +180,7 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => { handleLogout(); setIsMenuOpen(false); }}
-                  className="w-full px-4 py-3 text-sm font-medium rounded-lg border border-border hover:bg-surface-50 transition-colors text-danger-600 hover:text-danger-700 hover:border-danger-200 text-left"
+                  className="w-full px-4 py-3 text-sm font-medium rounded-lg border border-border dark:border-surface-700 hover:bg-surface-50 dark:hover:bg-surface-800 transition-colors text-danger-600 hover:text-danger-700 hover:border-danger-200 text-left"
                 >
                   Logout
                 </button>
@@ -167,7 +190,7 @@ export default function Navbar() {
             !loading && (
               <Link
                 href="/login"
-                className="block px-4 py-3 rounded-lg text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+                className="block px-4 py-3 rounded-lg text-sm font-medium text-primary hover:bg-primary/10 transition-colors dark:hover:bg-surface-800"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Sign In

@@ -5,6 +5,7 @@ import TaskForm from '@/components/TaskForm';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import type { Priority } from '@/lib/priority';
 import { PRIORITY_CONFIG } from '@/lib/priority';
+import { getDueDateStatus, isOverdue, formatDateDisplay } from '@/lib/priority';
 
 interface Task {
   id: string;
@@ -13,6 +14,7 @@ interface Task {
   status: 'Todo' | 'In Progress' | 'Done';
   priority: Priority;
   createdAt: string;
+  dueDate: string | null;
 }
 
 const STATUS_CYCLE: Record<string, string> = {
@@ -43,17 +45,17 @@ const StatusBadge = ({ status }: { status: string }) => {
 };
 
 const SkeletonTableRows = () => (
-  <div className="divide-y divide-surface-100">
+  <div className="divide-y divide-surface-100 dark:divide-surface-700">
     {Array.from({ length: 5 }).map((_, i) => (
       <div key={i} className="py-3.5 px-4 flex items-center gap-4 animate-pulse">
-        <div className="w-20 h-4 bg-surface-200 rounded" />
+        <div className="w-20 h-4 bg-surface-200 dark:bg-surface-700 rounded" />
         <div className="flex-1">
-          <div className="w-48 h-4 bg-surface-200 rounded mb-1" />
-          <div className="w-72 h-3 bg-surface-100 rounded" />
+          <div className="w-48 h-4 bg-surface-200 dark:bg-surface-700 rounded mb-1" />
+          <div className="w-72 h-3 bg-surface-100 dark:bg-surface-800 rounded" />
         </div>
-        <div className="w-16 h-6 bg-surface-200 rounded-full" />
-        <div className="w-20 h-4 bg-surface-200 rounded hidden sm:block" />
-        <div className="w-48 h-4 bg-surface-200 rounded hidden"/>
+        <div className="w-16 h-6 bg-surface-200 dark:bg-surface-700 rounded-full" />
+        <div className="w-20 h-4 bg-surface-200 dark:bg-surface-700 rounded hidden sm:block" />
+        <div className="w-48 h-4 bg-surface-200 dark:bg-surface-700 rounded hidden"/>
       </div>
     ))}
   </div>
@@ -94,6 +96,10 @@ export default function TasksPage() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
+  const [dueDateFilter, setDueDateFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [isPageLoading, setIsPageLoading] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; taskId: string | null; taskTitle: string }>({
     isOpen: false,
     taskId: null,
@@ -117,7 +123,7 @@ export default function TasksPage() {
     fetchTasks();
   }, []);
 
-  const handleCreate = async (task: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done'; priority: Priority }) => {
+  const handleCreate = async (task: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done'; priority: Priority; dueDate: string | null }) => {
     try {
       const res = await fetch('/api/tasks', {
         method: 'POST',
@@ -131,7 +137,7 @@ export default function TasksPage() {
     }
   };
 
-  const handleUpdate = async (task: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done'; priority: Priority }) => {
+  const handleUpdate = async (task: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done'; priority: Priority; dueDate: string | null }) => {
     if (!editingTask) return;
     try {
       const res = await fetch(`/api/tasks/${editingTask.id}`, {
@@ -194,28 +200,58 @@ export default function TasksPage() {
   const clearFilters = useCallback(() => {
     setSearch('');
     setStatusFilter('All');
+    setDueDateFilter('all');
   }, []);
 
   const debouncedSearch = useCallback(debounce((value: string) => {
     setSearch(value);
   }, 300), []);
 
-  const filteredTasks = tasks.filter(task => {
+  const filteredTasks = [...tasks].filter(task => {
     const matchesStatus = statusFilter === 'All' || task.status === statusFilter;
+    const matchesDueDate = dueDateFilter === 'all' ||
+      (dueDateFilter === 'overdue' && isOverdue(task.dueDate)) ||
+      (dueDateFilter === 'no-date' && !task.dueDate);
     const searchLower = search.toLowerCase();
     const matchesSearch = !search ||
       task.title.toLowerCase().includes(searchLower) ||
       task.description.toLowerCase().includes(searchLower);
-    return matchesStatus && matchesSearch;
+    return matchesStatus && matchesDueDate && matchesSearch;
   });
 
-  const hasActiveFilters = search.length > 0 || statusFilter !== 'All';
+  const sortedTasks = [...filteredTasks].sort((a, b) => {
+    const aOverdue = isOverdue(a.dueDate) ? 1 : 0;
+    const bOverdue = isOverdue(b.dueDate) ? 1 : 0;
+    if (bOverdue !== aOverdue) return bOverdue - aOverdue;
+    if (!a.dueDate && !b.dueDate) return 0;
+    if (!a.dueDate) return 1;
+    if (!b.dueDate) return -1;
+    return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+  });
+
+  const totalPages = sortedTasks.length > 0 ? Math.ceil(sortedTasks.length / pageSize) : 1;
+  const paginatedTasks = sortedTasks.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setIsPageLoading(true);
+    setCurrentPage(page);
+    setTimeout(() => setIsPageLoading(false), 200);
+  };
+
+  const handlePageSizeChange = (newSize: number) => {
+    setPageSize(newSize);
+    setCurrentPage(1);
+  };
+
+  const hasActiveFilters = search.length > 0 || statusFilter !== 'All' || dueDateFilter !== 'all';
+  const searchAndStatusFilters = search.length > 0 || statusFilter !== 'All';
 
   if (loading) {
     return (
       <div className="space-y-6">
         <div className="w-32 h-7 bg-surface-200 rounded animate-pulse" />
-        <div className="bg-white rounded-xl border border-surface-200 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-surface-900 rounded-xl border border-surface-200 dark:border-surface-700 shadow-sm overflow-hidden">
           <SkeletonTableRows />
         </div>
       </div>
@@ -247,7 +283,7 @@ export default function TasksPage() {
         <TaskForm onSubmit={handleCreate} />
       )}
 
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-white rounded-xl border border-surface-200 shadow-sm p-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 bg-white dark:bg-surface-900 rounded-xl border border-surface-200 dark:border-surface-700 shadow-sm p-3">
         <div className="relative flex-1 w-full">
           <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -257,7 +293,7 @@ export default function TasksPage() {
             placeholder="Search tasks..."
             value={search}
             onChange={(e) => debouncedSearch(e.target.value)}
-            className="w-full pl-9 pr-8 py-2 text-sm rounded-lg border border-surface-200 bg-surface-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
+            className="w-full pl-9 pr-8 py-2 text-sm rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors dark:text-surface-100"
           />
           {search && (
             <button
@@ -270,17 +306,26 @@ export default function TasksPage() {
             </button>
           )}
         </div>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 text-sm rounded-lg border border-surface-200 bg-surface-50 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors cursor-pointer"
-        >
-          <option value="All">All Status</option>
-          <option value="Todo">Todo</option>
-          <option value="In Progress">In Progress</option>
-          <option value="Done">Done</option>
-        </select>
-        {hasActiveFilters && (
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2 text-sm rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors cursor-pointer dark:text-surface-100"
+          >
+            <option value="All">All Status</option>
+            <option value="Todo">Todo</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Done">Done</option>
+          </select>
+          <select
+            value={dueDateFilter}
+            onChange={(e) => setDueDateFilter(e.target.value)}
+            className="px-3 py-2 text-sm rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 focus:bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors cursor-pointer dark:text-surface-100"
+          >
+            <option value="all">Any Due Date</option>
+            <option value="overdue">Overdue</option>
+            <option value="no-date">No Due Date</option>
+          </select>
+          {hasActiveFilters && (
           <button
             onClick={clearFilters}
             className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-muted hover:text-primary transition-colors"
@@ -300,29 +345,32 @@ export default function TasksPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-surface-50 border-b border-surface-200">
-                  <th scope="col" className="text-left py-3.5 px-4 font-semibold text-surface-700 min-w-[200px]">
+                <tr className="bg-surface-50 dark:bg-surface-800 border-b border-surface-200 dark:border-surface-700">
+                  <th scope="col" className="text-left py-3.5 px-4 font-semibold text-surface-700 dark:text-surface-300 min-w-[200px]">
                     Priority
                   </th>
-                  <th scope="col" className="text-left py-3.5 px-4 font-semibold text-surface-700 min-w-[200px]">
+                  <th scope="col" className="text-left py-3.5 px-4 font-semibold text-surface-700 dark:text-surface-300 min-w-[200px]">
                     Task
                   </th>
-                  <th scope="col" className="text-left py-3.5 px-4 font-semibold text-surface-700 min-w-[140px]">
+                  <th scope="col" className="text-left py-3.5 px-4 font-semibold text-surface-700 dark:text-surface-300 min-w-[140px]">
                     Status
                   </th>
-                  <th scope="col" className="text-left py-3.5 px-4 font-semibold text-surface-700 min-w-[130px] hidden sm:table-cell">
+                  <th scope="col" className="text-left py-3.5 px-4 font-semibold text-surface-700 dark:text-surface-300 min-w-[130px] hidden sm:table-cell">
                     Created
                   </th>
-                  <th scope="col" className="text-right py-3.5 px-4 font-semibold text-surface-700 min-w-[180px]">
+                  <th scope="col" className="text-left py-3.5 px-4 font-semibold text-surface-700 dark:text-surface-300 min-w-[120px] hidden md:table-cell">
+                    Due Date
+                  </th>
+                  <th scope="col" className="text-right py-3.5 px-4 font-semibold text-surface-700 dark:text-surface-300 min-w-[180px]">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-surface-100">
-                {filteredTasks.map((task) => (
+              <tbody className={`divide-y divide-surface-100 dark:divide-surface-700 ${isPageLoading ? 'animate-pulse' : ''}`}>
+                {paginatedTasks.map((task) => (
                   <tr
                     key={task.id}
-                    className="group transition-colors hover:bg-primary-50/50"
+                    className="group transition-colors hover:bg-primary-50/50 dark:hover:bg-primary-900/20"
                   >
                     <td className="py-3.5 px-4">
                       <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${
@@ -337,19 +385,58 @@ export default function TasksPage() {
                     </td>
                     <td className="py-3.5 px-4">
                       <div className="min-w-0">
-                        <p className="font-medium text-surface-900 truncate">{task.title}</p>
-                        <p className="text-muted text-xs mt-0.5 truncate max-w-md">{task.description}</p>
+                        <p className="font-medium text-surface-900 dark:text-surface-100 truncate">{task.title}</p>
+                        <p className="text-muted text-xs mt-0.5 truncate max-w-md dark:text-surface-500">{task.description}</p>
                       </div>
                     </td>
                     <td className="py-3.5 px-4">
                       <StatusBadge status={task.status} />
                     </td>
-                    <td className="py-3.5 px-4 text-surface-600 hidden sm:table-cell">
+                    <td className="py-3.5 px-4 text-surface-600 dark:text-surface-400 hidden sm:table-cell">
                       {new Date(task.createdAt).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric',
                       })}
+                    </td>
+                    <td className="py-3.5 px-4 hidden md:table-cell">
+                      {task.dueDate ? (() => {
+                        const dueStatus = getDueDateStatus(task.dueDate);
+                        if (dueStatus === 'overdue') {
+                          return (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-danger-600 dark:text-danger-400">
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              {formatDateDisplay(task.dueDate)}
+                            </span>
+                          );
+                        }
+                        if (dueStatus === 'today') {
+                          return (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-warning-600 dark:text-warning-400">
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              {formatDateDisplay(task.dueDate)}
+                            </span>
+                          );
+                        }
+                        if (dueStatus === 'due-soon') {
+                          return (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-yellow-600 dark:text-yellow-400">
+                              {formatDateDisplay(task.dueDate)}
+                            </span>
+                          );
+                        }
+                        return (
+                          <span className="text-xs text-muted dark:text-surface-500">
+                            {formatDateDisplay(task.dueDate)}
+                          </span>
+                        );
+                      })() : (
+                        <span className="text-xs text-muted dark:text-surface-600">—</span>
+                      )}
                     </td>
                     <td className="py-3.5 px-4">
                       <div className="flex items-center justify-end gap-1">
@@ -404,6 +491,95 @@ export default function TasksPage() {
           </div>
         )}
       </div>
+
+      {sortedTasks.length > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-white dark:bg-surface-900 rounded-xl border border-surface-200 dark:border-surface-700 shadow-sm p-4">
+          <div className="flex items-center gap-2 text-sm text-muted dark:text-surface-400">
+            <span>Showing</span>
+            <select
+              value={pageSize}
+              onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+              className="px-2 py-1 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-800 text-sm outline-none focus:border-primary focus:ring-1 focus:ring-primary cursor-pointer dark:text-surface-100"
+              aria-label="Items per page"
+            >
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+            <span>of {sortedTasks.length} tasks</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => handlePageChange(1)}
+              disabled={currentPage === 1}
+              className="p-2 rounded-lg text-surface-500 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="First page"
+              title="First page"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              className="p-2 rounded-lg text-surface-500 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Previous page"
+              title="Previous page"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(page => page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1)
+              .reduce<number[]>((acc, page, idx, arr) => {
+                if (idx > 0 && page - arr[idx - 1] > 1) acc.push(-1);
+                acc.push(page);
+                return acc;
+              }, [])
+              .map((page, idx) => page === -1 ? (
+                <span key={`ellipsis-${idx}`} className="px-2 text-muted dark:text-surface-500">...</span>
+              ) : (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={`min-w-[36px] h-9 rounded-lg text-sm font-medium transition-colors ${
+                    currentPage === page
+                      ? 'bg-primary text-white'
+                      : 'text-surface-600 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800'
+                  }`}
+                  aria-label={`Page ${page}`}
+                  aria-current={currentPage === page ? 'page' : undefined}
+                >
+                  {page}
+                </button>
+              ))}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage >= totalPages}
+              className="p-2 rounded-lg text-surface-500 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Next page"
+              title="Next page"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+            <button
+              onClick={() => handlePageChange(totalPages)}
+              disabled={currentPage >= totalPages}
+              className="p-2 rounded-lg text-surface-500 dark:text-surface-400 hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Last page"
+              title="Last page"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
 
       <ConfirmDialog
         isOpen={deleteDialog.isOpen}

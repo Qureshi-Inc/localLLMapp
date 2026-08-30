@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { isAuthenticated, login, getCredentials } from '@/lib/auth';
 
@@ -39,7 +40,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-surface-50 to-primary-50 p-4">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-surface-50 to-primary-50 p-4 pt-20">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl border border-border shadow-sm p-8 sm:p-10">
           <div className="text-center mb-8">

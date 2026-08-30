@@ -40,6 +40,7 @@ describe('TaskForm Component', () => {
         description: 'New Desc',
         priority: 'Medium',
         status: 'In Progress',
+        dueDate: null,
       });
     });
   });
@@ -209,6 +210,7 @@ describe('TaskForm Component', () => {
         description: 'New Desc',
         status: 'Todo',
         priority: 'High',
+        dueDate: null,
       });
     });
   });
@@ -243,7 +245,90 @@ describe('TaskForm Component', () => {
         description: 'Desc',
         status: 'Todo',
         priority: 'Medium',
+        dueDate: null,
       });
+    });
+  });
+
+  it('shows error when title is empty', () => {
+    render(<TaskForm onSubmit={jest.fn()} />);
+
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'Some description' } });
+    fireEvent.blur(screen.getByLabelText(/title/i));
+
+    const errors = screen.queryAllByText('Title is required');
+    expect(errors.length).toBeGreaterThan(0);
+  });
+
+  it('shows error when title is too short', () => {
+    render(<TaskForm onSubmit={jest.fn()} />);
+
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'A' } });
+    fireEvent.blur(screen.getByLabelText(/title/i));
+
+    const errors = screen.queryAllByText('Title must be at least 2 characters');
+    expect(errors.length).toBeGreaterThan(0);
+  });
+
+  it('shows error when description is empty', () => {
+    render(<TaskForm onSubmit={jest.fn()} />);
+
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'Valid Title' } });
+    fireEvent.blur(screen.getByLabelText(/description/i));
+
+    const errors = screen.queryAllByText('Description is required');
+    expect(errors.length).toBeGreaterThan(0);
+  });
+
+  it('does not submit when validation fails', async () => {
+    const handleSubmit = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    render(<TaskForm onSubmit={handleSubmit} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /create task/i }));
+
+    await waitFor(() => {
+      expect(handleSubmit).not.toHaveBeenCalled();
+    });
+    expect(screen.getByText('Please fix the errors below')).toBeInTheDocument();
+  });
+
+  it('renders due date input field', () => {
+    render(<TaskForm onSubmit={jest.fn()} />);
+    expect(screen.getByLabelText(/due date/i)).toBeInTheDocument();
+  });
+
+  it('includes dueDate in submission payload when set', async () => {
+    const handleSubmit = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    render(<TaskForm onSubmit={handleSubmit} />);
+
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'New Task' } });
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'New Desc' } });
+    fireEvent.change(screen.getByLabelText(/due date/i), { target: { value: '2025-06-15' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /create task/i }));
+
+    await waitFor(() => {
+      expect(handleSubmit).toHaveBeenCalledWith({
+        title: 'New Task',
+        description: 'New Desc',
+        status: 'Todo',
+        priority: 'Medium',
+        dueDate: '2025-06-15',
+      });
+    });
+  });
+
+  it('includes null dueDate when not set', async () => {
+    const handleSubmit = jest.fn<() => Promise<void>>().mockResolvedValue(undefined);
+    render(<TaskForm onSubmit={handleSubmit} />);
+
+    fireEvent.change(screen.getByLabelText(/title/i), { target: { value: 'New Task' } });
+    fireEvent.change(screen.getByLabelText(/description/i), { target: { value: 'New Desc' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /create task/i }));
+
+    await waitFor(() => {
+      expect(handleSubmit).toHaveBeenCalledWith(expect.objectContaining({ dueDate: null }));
     });
   });
 });

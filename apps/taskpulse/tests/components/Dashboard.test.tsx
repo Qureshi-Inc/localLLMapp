@@ -1,10 +1,17 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import DashboardPage from '@/app/dashboard/page';
 
 jest.mock('next/navigation', () => ({
   usePathname: jest.fn(),
 }));
+
+jest.mock('@/lib/theme', () => ({
+  ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
+  useTheme: jest.fn().mockReturnValue({ theme: 'light', toggleTheme: jest.fn() }),
+}));
+
+// Import after mocks
+import DashboardPage from '@/app/dashboard/page';
 
 const { usePathname } = require('next/navigation');
 
@@ -189,7 +196,7 @@ describe('Dashboard Component', () => {
       new Promise(() => {})
     );
     render(<DashboardPage />);
-    expect(screen.getByText('Loading dashboard...')).toBeInTheDocument();
+    expect(document.querySelector('.animate-spin')).toBeInTheDocument();
   });
 
   it('renders delete buttons for tasks', async () => {
@@ -261,5 +268,48 @@ describe('Dashboard Component', () => {
     await waitFor(() => {
       expect(screen.getByText('No tasks yet. Create your first task to get started!')).toBeInTheDocument();
     });
+  });
+
+  it('handles fetch error gracefully', async () => {
+    (global.fetch as jest.Mock).mockImplementationOnce(() =>
+      Promise.reject(new Error('Network error'))
+    );
+    render(<DashboardPage />);
+    await waitFor(() => {
+      expect(screen.getByText('Dashboard')).toBeInTheDocument();
+    });
+  });
+
+  it('toggles task status when complete button is clicked', async () => {
+    (global.fetch as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve(mockTasks),
+      })
+    );
+    (global.fetch as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({ ok: true })
+    );
+    render(<DashboardPage />);
+    await waitFor(() => {
+      const todoTexts = screen.getAllByText('Todo');
+      expect(todoTexts.length).toBeGreaterThan(0);
+    });
+    const completeButtons = document.querySelectorAll('[title="Complete"]');
+    if (completeButtons.length > 0) {
+      fireEvent.click(completeButtons[0]);
+    }
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/tasks/'), expect.objectContaining({ method: 'PATCH' }));
+    });
+  });
+
+  it('renders loading skeletons during initial load', () => {
+    (global.fetch as jest.Mock).mockImplementationOnce(() =>
+      new Promise(() => {})
+    );
+    render(<DashboardPage />);
+    const pulseElements = document.querySelectorAll('.animate-pulse');
+    expect(pulseElements.length).toBeGreaterThan(0);
   });
 });

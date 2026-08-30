@@ -16,7 +16,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, description, status, priority: rawPriority } = body;
+    const { title, description, status, priority: rawPriority, dueDate } = body;
 
     if (!title || !description || !status) {
       return NextResponse.json({ error: 'Missing required fields: title, description, status' }, { status: 400 });
@@ -26,6 +26,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Title must be at most 200 characters' }, { status: 400 });
     }
 
+    if (dueDate && isNaN(new Date(dueDate).getTime())) {
+      return NextResponse.json({ error: 'Invalid due date format' }, { status: 400 });
+    }
+
     const validStatuses = ['Todo', 'In Progress', 'Done'];
     if (!validStatuses.includes(status)) {
       return NextResponse.json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` }, { status: 400 });
@@ -33,7 +37,7 @@ export async function POST(request: Request) {
 
     const priority = (VALID_PRIORITIES.includes(rawPriority) ? rawPriority : 'Medium') as ValidPriority;
 
-    const task = await createTask({ title, description, status, priority });
+    const task = await createTask({ title, description, status, priority, dueDate: dueDate || null });
     return NextResponse.json(task, { status: 201 });
   } catch {
     return NextResponse.json({ error: 'Failed to create task' }, { status: 500 });

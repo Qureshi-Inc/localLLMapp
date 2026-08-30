@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, FormEvent } from 'react';
-import type { Priority, PRIORITY_CONFIG as PRIORITY_CONFIG_TYPE } from '@/lib/db';
+import type { Priority, PRIORITY_CONFIG as PRIORITY_CONFIG_TYPE } from '@/lib/priority';
 
-export type { Priority } from '@/lib/db';
+export type { Priority } from '@/lib/priority';
 const PRIORITY_CONFIG = {
   'Low': { active: 'bg-surface-200 text-surface-900 ring-surface-400/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-surface-400' },
   'Medium': { active: 'bg-warning-100 text-warning-800 ring-warning-500/30', inactive: 'bg-surface-50 text-surface-600 ring-surface-300/50', dot: 'bg-yellow-500' },
@@ -12,8 +12,8 @@ const PRIORITY_CONFIG = {
 } as Record<string, { active: string; inactive: string; dot: string }>;
 
 interface TaskFormProps {
-  onSubmit: (task: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done'; priority: Priority }) => void | Promise<void>;
-  initialData?: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done'; priority?: Priority };
+  onSubmit: (task: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done'; priority: Priority; dueDate: string | null }) => void | Promise<void>;
+  initialData?: { title: string; description: string; status: 'Todo' | 'In Progress' | 'Done'; priority?: Priority; dueDate?: string | null };
   onCancel?: () => void;
 }
 
@@ -27,6 +27,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
   const [description, setDescription] = useState(initialData?.description || '');
   const [status, setStatus] = useState<'Todo' | 'In Progress' | 'Done'>(initialData?.status || 'Todo');
   const [priority, setPriority] = useState<Priority>(initialData?.priority || 'Medium');
+  const [dueDate, setDueDate] = useState<string | null>(initialData?.dueDate || null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [errors, setErrors] = useState<FieldError>({});
@@ -37,9 +38,10 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
     setDescription(initialData?.description || '');
     setStatus(initialData?.status || 'Todo');
     setPriority(initialData?.priority || 'Medium');
+    setDueDate(initialData?.dueDate || null);
     setErrors({});
     setTouched({});
-  }, [initialData?.title, initialData?.description, initialData?.status, initialData?.priority]);
+  }, [initialData?.title, initialData?.description, initialData?.status, initialData?.priority, initialData?.dueDate]);
 
   useEffect(() => {
     if (isSuccess) {
@@ -50,6 +52,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
         setDescription('');
         setStatus('Todo');
         setPriority('Medium');
+        setDueDate(null);
       }
       }, 2500);
       return () => clearTimeout(timer);
@@ -84,12 +87,13 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
     setIsSubmitting(true);
     setIsSuccess(false);
     try {
-      await onSubmit({ title, description, status, priority });
+      await onSubmit({ title, description, status, priority, dueDate });
       setIsSuccess(true);
       if (!initialData) {
         setTitle('');
         setDescription('');
         setStatus('Todo');
+        setDueDate(null);
       }
     } finally {
       setIsSubmitting(false);
@@ -101,6 +105,7 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
     setDescription(initialData?.description || '');
     setStatus(initialData?.status || 'Todo');
     setPriority(initialData?.priority || 'Medium');
+    setDueDate(initialData?.dueDate || null);
     setErrors({});
     setTouched({});
   };
@@ -282,6 +287,30 @@ export default function TaskForm({ onSubmit, initialData, onCancel }: TaskFormPr
               );
             })}
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <label htmlFor="task-due-date" className="block text-xs font-medium text-surface-500 uppercase tracking-wide">
+            Due Date (optional)
+          </label>
+          <input
+            id="task-due-date"
+            type="date"
+            value={dueDate || ''}
+            onChange={(e) => setDueDate(e.target.value || null)}
+            className="w-full appearance-none bg-surface-50 border border-input rounded-lg px-4 py-2.5 text-sm text-surface-900 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors disabled:opacity-50 cursor-pointer dark:bg-surface-800 dark:border-surface-700 dark:text-surface-100"
+            disabled={isSubmitting}
+          />
+          {dueDate && (
+            <button
+              type="button"
+              onClick={() => setDueDate(null)}
+              className="text-xs text-muted hover:text-danger-600 transition-colors"
+              disabled={isSubmitting}
+            >
+              Clear due date
+            </button>
+          )}
         </div>
 
         <div className="flex items-center gap-3 pt-2">
