@@ -1,3 +1,4 @@
+/// <reference types="@testing-library/jest-dom/jest-globals" />
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import ConfirmDialog from '@/components/ConfirmDialog';

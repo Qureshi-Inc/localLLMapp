@@ -1,16 +1,31 @@
 import { describe, it, expect, jest, beforeEach, afterEach } from '@jest/globals';
 import { render, screen, fireEvent } from '@testing-library/react';
 
+// Mock the Next.js navigation internals BEFORE any other imports
+jest.mock('next/dist/client/components/navigation', () => ({
+  unstable_preload: jest.fn(),
+  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn(), forward: jest.fn() }),
+  usePathname: () => '/',
+  useSearchParams: () => new URLSearchParams(),
+  useSelectedLayoutSegment: () => null,
+  useSelectedLayoutSegments: () => [],
+}));
+
 jest.mock('next/link', () => {
   return function Link({ href, children, className, target, rel }: any) {
     return <a href={href} className={className} target={target} rel={rel}>{children}</a>;
   };
 });
 
-jest.mock('next/navigation', () => ({
-  usePathname: jest.fn(() => '/'),
-  useRouter: jest.fn(() => ({ push: jest.fn(), replace: jest.fn() })),
-}));
+jest.mock('next/navigation', () => {
+  return {
+    useRouter: jest.fn().mockReturnValue({ push: jest.fn(), replace: jest.fn() }),
+    usePathname: jest.fn().mockReturnValue('/'),
+    useSearchParams: jest.fn().mockReturnValue(new URLSearchParams()),
+    useSelectedLayoutSegment: jest.fn().mockReturnValue(null),
+    useSelectedLayoutSegments: jest.fn().mockReturnValue([]),
+  };
+});
 
 jest.mock('@/lib/theme-provider', () => ({
   useTheme: jest.fn().mockReturnValue({ theme: 'light', toggleTheme: jest.fn() }),
@@ -22,7 +37,7 @@ jest.mock('@/lib/auth', () => ({
 }));
 
 import Navbar from '@/components/Navbar';
-const { usePathname, useRouter } = require('next/navigation');
+const { usePathname } = require('next/navigation');
 
 describe('Navbar Component', () => {
   beforeEach(() => {
