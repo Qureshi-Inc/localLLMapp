@@ -146,12 +146,14 @@ async def create_document(
     filename: str,
     mime_type: str | None = None,
     uploaded_by: UUID | None = None,
+    file_size: int | None = None,
 ) -> Document:
     doc = Document(
         matter_id=matter_id,
         filename=filename,
         mime_type=mime_type,
         uploaded_by=uploaded_by,
+        file_size=file_size,
     )
     db.add(doc)
     await db.commit()

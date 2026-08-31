@@ -1,0 +1,163 @@
+# CaseVault — Docker Compose stack (all local, no external ports except Caddy)
+x-common-opts: &common-opts
+  restart: unless-stopped
+
+services:
+  # ── Infrastructure ──────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    <<: *common-opts
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: casevault
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./deploy/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    networks:
+      - casevault
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d casevault"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:1.13.2
+    <<: *common-opts
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - casevault
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    <<: *common-opts
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - casevault
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    command: ["serve"]
+
+  minio:
+    image: minio/minio:latest
+    <<: *common-opts
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-casevault-minio-key}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-casevault-minio-secret}
+    volumes:
+      - minio_data:/data
+    networks:
+      - casevault
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    expose:
+      - "9000"
+
+# ── Application ────────────────────────────────────────────────
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    <<: *common-opts
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/casevault
+      QDRANT_URL: http://qdrant:6333
+      OLLAMA_URL: http://ollama:11434
+      STORAGE_MODE: ${STORAGE_MODE:-localfs}
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-casevault-minio-key}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-casevault-minio-secret}
+      OLLAMA_PULL_MODELS: "gpt-oss-20b nomic-embed-text"
+    volumes:
+      - ${STORAGE_PATH:-./storage}:/var/lib/casevault/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+    networks:
+      - casevault
+
+  worker:
+    build:
+      context: ./worker
+      dockerfile: Dockerfile
+    <<: *common-opts
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/casevault
+      QDRANT_URL: http://qdrant:6333
+      OLLAMA_URL: http://ollama:11434
+      STORAGE_MODE: ${STORAGE_MODE:-localfs}
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-casevault-minio-key}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-casevault-minio-secret}
+    volumes:
+      - ${STORAGE_PATH:-./storage}:/var/lib/casevault/storage
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - casevault
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    <<: *common-opts
+    environment:
+      NEXT_PUBLIC_API_URL: /api
+    depends_on:
+      - backend
+    networks:
+      - casevault
+
+  caddy:
+    image: caddy:2.9.1-alpine
+    <<: *common-opts
+    ports:
+      - "443:443"
+      - "80:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - casevault
+    depends_on:
+      - frontend
+      - backend
+
+# ── Volumes ────────────────────────────────────────────────────
+
+volumes:
+  pgdata:
+  qdrant_data:
+  ollama_data:
+  minio_data:
+  caddy_data:
+  caddy_config:
+
+# ── Network ────────────────────────────────────────────────────
+
+networks:
+  casevault:
+    driver: bridge

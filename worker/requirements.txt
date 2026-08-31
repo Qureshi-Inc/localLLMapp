@@ -1,0 +1,10 @@
+docling[full]
+pypdf
+pytesseract
+pdf2image
+Pillow>=10.0.0
+sqlalchemy
+alembic
+psycopg2-binary
+httpx
+tenacity

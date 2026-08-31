@@ -1,6 +1,4 @@
-node_modules/
-.next/
-out/
-dist/
+__pycache__/
+*.pyc
+*.pyo
 .env
-.env.local

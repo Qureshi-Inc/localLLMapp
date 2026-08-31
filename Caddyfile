@@ -1,0 +1,19 @@
+:443 {
+    tls internal
+
+    # Backend API
+    reverse_proxy backend:8000 /api/*
+
+    # Frontend
+    reverse_proxy frontend:3000 /
+
+    # Health check for Caddy itself
+    health_path /health
+}
+
+:80 {
+    http_auto_https off
+
+    # Redirect HTTP to HTTPS
+    redir https://localhost{uri}
+}
