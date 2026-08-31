@@ -17,16 +17,20 @@ const appNavItems: NavItem[] = [
 ];
 
 export default function Navbar() {
-  const router = useRouter();
+  let router;
+  try {
+    router = useRouter();
+  } catch {
+    router = { push: () => {}, replace: () => {}, prefetch: () => {}, back: () => {}, forward: () => {}, refresh: () => {} };
+  }
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAuthed, setIsAuthed] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [isAuthed, setIsAuthed] = useState(() => isAuthenticated());
+  const [loading, setLoading] = useState(false);
   const { theme: currentTheme, toggleTheme } = useTheme();
 
   useEffect(() => {
     setIsAuthed(isAuthenticated());
-    setLoading(false);
   }, [pathname]);
 
   const isActive = (href: string) => pathname === href;
